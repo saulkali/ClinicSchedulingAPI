@@ -1,27 +1,70 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ClinicScheduling.Api.Common.Dtos;
 
 public static class AppointmentDtos
 {
     public class Create
     {
-        public int DoctorId { get; set; }
-        public int PatientId { get; set; }
+        [Required]
+        public Guid DoctorId { get; set; }
+
+        [Required]
+        public Guid PatientId { get; set; }
+
+        [Required]
         public DateTime StartDateTime { get; set; }
+
+        [Required]
+        public DateTime EndDateTime { get; set; }
+
+        [Range(1, 480)]
+        public int DurationMinutes { get; set; }
+
+        [MaxLength(300)]
         public string? Reason { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        public string Status { get; set; } = "Scheduled";
+
+        [MaxLength(300)]
+        public string? CancellationReason { get; set; }
     }
 
     public class Update
     {
+        [Required]
+        public Guid DoctorId { get; set; }
+
+        [Required]
+        public Guid PatientId { get; set; }
+
+        [Required]
         public DateTime StartDateTime { get; set; }
+
+        [Required]
+        public DateTime EndDateTime { get; set; }
+
+        [Range(1, 480)]
+        public int DurationMinutes { get; set; }
+
+        [MaxLength(300)]
         public string? Reason { get; set; }
+
+        [Required]
+        [MaxLength(50)]
         public string Status { get; set; } = null!;
+
+        [MaxLength(300)]
         public string? CancellationReason { get; set; }
+
         public bool IsActive { get; set; }
     }
 
     public class Response
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public Guid DoctorId { get; set; }
         public string DoctorName { get; set; } = null!;
         public Guid PatientId { get; set; }
