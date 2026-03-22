@@ -1,5 +1,6 @@
 using ClinicScheduling.Api.Models.IRepositories;
 using ClinicScheduling.Api.Models.Repositories;
+using ClinicScheduling.Api.Models.Services;
 
 namespace ClinicScheduling.Api.Common.InjectionDependency;
 
@@ -15,5 +16,6 @@ public static class RepositoriesInjection
         services.AddScoped<IDoctorRepository, DoctorRepository>();
         services.AddScoped<IDoctorScheduleRepository, DoctorScheduleRepository>();
         services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+        services.AddScoped<AppointmentSchedulingService>();
     }
 }

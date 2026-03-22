@@ -4,6 +4,9 @@ namespace ClinicScheduling.Api.Common.Dtos;
 
 public static class AppointmentDtos
 {
+    /// <summary>
+    /// Solicitud para crear una cita médica.
+    /// </summary>
     public class Create
     {
         [Required]
@@ -32,6 +35,9 @@ public static class AppointmentDtos
         public string? CancellationReason { get; set; }
     }
 
+    /// <summary>
+    /// Solicitud para actualizar una cita médica.
+    /// </summary>
     public class Update
     {
         [Required]
@@ -62,6 +68,9 @@ public static class AppointmentDtos
         public bool IsActive { get; set; }
     }
 
+    /// <summary>
+    /// Respuesta de una cita médica con alertas y metadatos de agenda.
+    /// </summary>
     public class Response
     {
         public Guid Id { get; set; }
@@ -78,5 +87,8 @@ public static class AppointmentDtos
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime ModifiedAt { get; set; }
+        public bool HasCancellationAlert { get; set; }
+        public int RecentCancellationCount { get; set; }
+        public IReadOnlyCollection<DateTime> SuggestedSlots { get; set; } = Array.Empty<DateTime>();
     }
 }

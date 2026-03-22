@@ -1,38 +1,56 @@
 using ClinicScheduling.Api.Common.Database.Entities;
 using ClinicScheduling.Api.Common.Dtos;
 using ClinicScheduling.Api.Models.IRepositories;
+using ClinicScheduling.Api.Models.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicScheduling.Api.Controllers;
 
+/// <summary>
+/// Expone operaciones para consultar, crear, actualizar y eliminar citas médicas.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class AppointmentController : ControllerBase
 {
     private readonly IAppointmentRepository _repository;
+    private readonly AppointmentSchedulingService _appointmentSchedulingService;
 
-    public AppointmentController(IAppointmentRepository repository)
+    /// <summary>
+    /// Inicializa una nueva instancia del controlador de citas.
+    /// </summary>
+    public AppointmentController(IAppointmentRepository repository, AppointmentSchedulingService appointmentSchedulingService)
     {
         _repository = repository;
+        _appointmentSchedulingService = appointmentSchedulingService;
     }
 
+    /// <summary>
+    /// Obtiene todas las citas registradas.
+    /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<AppointmentDtos.Response>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
         var appointments = await _repository.GetAllAsync();
-        return Ok(appointments.Select(MapResponse));
+        return Ok(appointments.Select(entity => MapResponse(entity, false, 0)));
     }
 
+    /// <summary>
+    /// Obtiene una cita por su identificador.
+    /// </summary>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(AppointmentDtos.Response), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id)
     {
         var appointment = await _repository.GetByIdAsync(id);
-        return appointment is null ? NotFound() : Ok(MapResponse(appointment));
+        return appointment is null ? NotFound() : Ok(MapResponse(appointment, false, 0));
     }
 
+    /// <summary>
+    /// Crea una cita médica aplicando las reglas de agenda del negocio.
+    /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(AppointmentDtos.Response), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -41,29 +59,26 @@ public class AppointmentController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        if (request.EndDateTime <= request.StartDateTime)
-            return BadRequest("EndDateTime debe ser mayor que StartDateTime.");
+        var result = await _appointmentSchedulingService.ScheduleAsync(
+            request.DoctorId,
+            request.PatientId,
+            request.StartDateTime,
+            request.Status,
+            request.Reason,
+            request.CancellationReason);
 
-        var entity = new AppointmentEntity
-        {
-            Id = Guid.NewGuid(),
-            DoctorId = request.DoctorId,
-            PatientId = request.PatientId,
-            StartDateTime = request.StartDateTime,
-            EndDateTime = request.EndDateTime,
-            DurationMinutes = request.DurationMinutes,
-            Reason = request.Reason,
-            Status = request.Status,
-            CancellationReason = request.CancellationReason,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow,
-            IsActive = true
-        };
+        if (!result.Succeeded)
+            return BadRequest(new { message = result.ErrorMessage, suggestedSlots = result.SuggestedSlots });
 
-        var created = await _repository.CreateAsync(entity);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, MapResponse(created));
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = result.Appointment!.Id },
+            MapResponse(result.Appointment!, result.HasCancellationAlert, result.RecentCancellationCount));
     }
 
+    /// <summary>
+    /// Actualiza una cita existente aplicando las reglas de agenda del negocio.
+    /// </summary>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(AppointmentDtos.Response), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -73,28 +88,29 @@ public class AppointmentController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        if (request.EndDateTime <= request.StartDateTime)
-            return BadRequest("EndDateTime debe ser mayor que StartDateTime.");
-
         var existing = await _repository.GetByIdAsync(id);
         if (existing is null)
             return NotFound();
 
-        existing.DoctorId = request.DoctorId;
-        existing.PatientId = request.PatientId;
-        existing.StartDateTime = request.StartDateTime;
-        existing.EndDateTime = request.EndDateTime;
-        existing.DurationMinutes = request.DurationMinutes;
-        existing.Reason = request.Reason;
-        existing.Status = request.Status;
-        existing.CancellationReason = request.CancellationReason;
-        existing.IsActive = request.IsActive;
-        existing.ModifiedAt = DateTime.UtcNow;
+        var result = await _appointmentSchedulingService.UpdateAsync(
+            id,
+            request.DoctorId,
+            request.PatientId,
+            request.StartDateTime,
+            request.Status,
+            request.Reason,
+            request.CancellationReason,
+            request.IsActive);
 
-        var updated = await _repository.UpdateAsync(existing);
-        return updated is null ? NotFound() : Ok(MapResponse(updated));
+        if (!result.Succeeded)
+            return BadRequest(new { message = result.ErrorMessage, suggestedSlots = result.SuggestedSlots });
+
+        return Ok(MapResponse(result.Appointment!, result.HasCancellationAlert, result.RecentCancellationCount));
     }
 
+    /// <summary>
+    /// Elimina una cita por su identificador.
+    /// </summary>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -104,7 +120,10 @@ public class AppointmentController : ControllerBase
         return deleted ? NoContent() : NotFound();
     }
 
-    private static AppointmentDtos.Response MapResponse(AppointmentEntity entity) => new()
+    /// <summary>
+    /// Convierte una entidad de cita a su DTO de respuesta.
+    /// </summary>
+    private static AppointmentDtos.Response MapResponse(AppointmentEntity entity, bool hasCancellationAlert, int recentCancellationCount) => new()
     {
         Id = entity.Id,
         DoctorId = entity.DoctorId,
@@ -119,6 +138,8 @@ public class AppointmentController : ControllerBase
         CancellationReason = entity.CancellationReason,
         IsActive = entity.IsActive,
         CreatedAt = entity.CreatedAt,
-        ModifiedAt = entity.ModifiedAt
+        ModifiedAt = entity.ModifiedAt,
+        HasCancellationAlert = hasCancellationAlert,
+        RecentCancellationCount = recentCancellationCount
     };
 }
