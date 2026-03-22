@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "r7gDzTlIOU+5S4i6oYrTZ71KogbXYs+f8enRzWPISFU=",
+  "Source": "ClinicScheduling.Api",
+  "BasePath": "_content/ClinicScheduling.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
