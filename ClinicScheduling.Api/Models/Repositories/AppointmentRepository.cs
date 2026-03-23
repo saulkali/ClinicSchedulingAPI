@@ -54,17 +54,15 @@ public class AppointmentRepository : IAppointmentRepository
             : (int)entity.StartDateTime.DayOfWeek;
 
         var startTime = entity.StartDateTime.TimeOfDay;
-        var endTime = entity.EndDateTime.TimeOfDay;
-
-        var scheduleExists = await _dbContext.DoctorSchedules
-            .AsNoTracking()
-            .AnyAsync(x =>
-                x.DoctorId == entity.DoctorId &&
-                x.IsActive &&
+        var endTime = expectedEndDateTime.TimeOfDay;
+        
+        var scheduleList = await _dbContext.DoctorSchedules.Where(x => x.DoctorId == entity.DoctorId && x.IsActive).ToListAsync();
+        var scheduleExists = scheduleList
+            .Where(x =>
                 x.DayOfWeek == appointmentDayOfWeek &&
                 startTime >= x.StartTime &&
-                endTime <= x.EndTime);
-
+                endTime <= x.EndTime)
+            .FirstOrDefault() != null;
         if (!scheduleExists)
             throw new InvalidOperationException("No se puede agendar una cita con el doctor porque no está dentro del horario laboral registrado.");
 
