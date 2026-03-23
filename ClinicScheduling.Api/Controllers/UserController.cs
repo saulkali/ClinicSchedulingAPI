@@ -1,20 +1,22 @@
+using AutoMapper;
 using ClinicScheduling.Api.Common.Database.Entities;
 using ClinicScheduling.Api.Common.Dtos;
 using ClinicScheduling.Api.Models.IRepositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicScheduling.Api.Controllers;
+
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
     private readonly IUserRepository _repository;
-    private readonly ILogger<UserController> _logger;
+    private readonly IMapper _mapper;
 
-    public UserController(IUserRepository repository, ILogger<UserController> logger)
+    public UserController(IUserRepository repository, IMapper mapper)
     {
         _repository = repository;
-        _logger = logger;
+        _mapper = mapper;
     }
 
     [HttpGet]
@@ -22,19 +24,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var users = await _repository.GetAllAsync();
-
-        var response = users.Select(x => new UserDtos.Response
-        {
-            Id = x.Id,
-            Email = x.Email,
-            RoleId = x.RoleId,
-            RoleName = x.Role?.Name ?? string.Empty,
-            IsActive = x.IsActive,
-            CreatedAt = x.CreatedAt,
-            ModifiedAt = x.ModifiedAt
-        });
-
-        return Ok(response);
+        return Ok(_mapper.Map<IEnumerable<UserDtos.Response>>(users));
     }
 
     [HttpGet("{id:guid}")]
@@ -47,18 +37,7 @@ public class UserController : ControllerBase
         if (user is null)
             return NotFound();
 
-        var response = new UserDtos.Response
-        {
-            Id = user.Id,
-            Email = user.Email,
-            RoleId = user.RoleId,
-            RoleName = user.Role?.Name ?? string.Empty,
-            IsActive = user.IsActive,
-            CreatedAt = user.CreatedAt,
-            ModifiedAt = user.ModifiedAt
-        };
-
-        return Ok(response);
+        return Ok(_mapper.Map<UserDtos.Response>(user));
     }
 
     [HttpPost]
@@ -69,31 +48,13 @@ public class UserController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var entity = new UserEntity
-        {
-            Id = Guid.NewGuid(),
-            Email = request.Email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            RoleId = request.RoleId,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow
-        };
+        var entity = _mapper.Map<UserEntity>(request);
+        entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
         var created = await _repository.CreateAsync(entity);
 
-        var response = new UserDtos.Response
-        {
-            Id = created.Id,
-            Email = created.Email,
-            RoleId = created.RoleId,
-            RoleName = created.Role?.Name ?? string.Empty,
-            IsActive = created.IsActive,
-            CreatedAt = created.CreatedAt,
-            ModifiedAt = created.ModifiedAt
-        };
-
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id },
+            _mapper.Map<UserDtos.Response>(created));
     }
 
     [HttpPut("{id:guid}")]
@@ -110,28 +71,14 @@ public class UserController : ControllerBase
         if (existing is null)
             return NotFound();
 
-        existing.Email = request.Email;
-        existing.RoleId = request.RoleId;
-        existing.IsActive = request.IsActive;
-        existing.ModifiedAt = DateTime.UtcNow;
+        _mapper.Map(request, existing);
 
         var updated = await _repository.UpdateAsync(existing);
 
         if (updated is null)
             return NotFound();
 
-        var response = new UserDtos.Response
-        {
-            Id = updated.Id,
-            Email = updated.Email,
-            RoleId = updated.RoleId,
-            RoleName = updated.Role?.Name ?? string.Empty,
-            IsActive = updated.IsActive,
-            CreatedAt = updated.CreatedAt,
-            ModifiedAt = updated.ModifiedAt
-        };
-
-        return Ok(response);
+        return Ok(_mapper.Map<UserDtos.Response>(updated));
     }
 
     [HttpDelete("{id:guid}")]

@@ -1,3 +1,4 @@
+using AutoMapper;
 using ClinicScheduling.Api.Common.Database.Entities;
 using ClinicScheduling.Api.Common.Dtos;
 using ClinicScheduling.Api.Models.IRepositories;
@@ -10,10 +11,12 @@ namespace ClinicScheduling.Api.Controllers;
 public class DoctorScheduleController : ControllerBase
 {
     private readonly IDoctorScheduleRepository _repository;
+    private readonly IMapper _mapper;
 
-    public DoctorScheduleController(IDoctorScheduleRepository repository)
+    public DoctorScheduleController(IDoctorScheduleRepository repository, IMapper mapper)
     {
         _repository = repository;
+        _mapper = mapper;
     }
 
     [HttpGet]
@@ -21,7 +24,7 @@ public class DoctorScheduleController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var schedules = await _repository.GetAllAsync();
-        return Ok(schedules.Select(MapResponse));
+        return Ok(_mapper.Map<IEnumerable<DoctorScheduleDtos.Response>>(schedules));
     }
 
     [HttpGet("{id:guid}")]
@@ -30,7 +33,7 @@ public class DoctorScheduleController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var schedule = await _repository.GetByIdAsync(id);
-        return schedule is null ? NotFound() : Ok(MapResponse(schedule));
+        return schedule is null ? NotFound() : Ok(_mapper.Map<DoctorScheduleDtos.Response>(schedule));
     }
 
     [HttpPost]
@@ -44,20 +47,11 @@ public class DoctorScheduleController : ControllerBase
         if (request.EndTime <= request.StartTime)
             return BadRequest("EndTime debe ser mayor que StartTime.");
 
-        var entity = new DoctorScheduleEntity
-        {
-            Id = Guid.NewGuid(),
-            DoctorId = request.DoctorId,
-            DayOfWeek = request.DayOfWeek,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow,
-            IsActive = true
-        };
-
+        var entity = _mapper.Map<DoctorScheduleEntity>(request);
         var created = await _repository.CreateAsync(entity);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, MapResponse(created));
+
+        return CreatedAtAction(nameof(GetById), new { id = created.Id },
+            _mapper.Map<DoctorScheduleDtos.Response>(created));
     }
 
     [HttpPut("{id:guid}")]
@@ -76,15 +70,10 @@ public class DoctorScheduleController : ControllerBase
         if (existing is null)
             return NotFound();
 
-        existing.DoctorId = request.DoctorId;
-        existing.DayOfWeek = request.DayOfWeek;
-        existing.StartTime = request.StartTime;
-        existing.EndTime = request.EndTime;
-        existing.IsActive = request.IsActive;
-        existing.ModifiedAt = DateTime.UtcNow;
+        _mapper.Map(request, existing);
 
         var updated = await _repository.UpdateAsync(existing);
-        return updated is null ? NotFound() : Ok(MapResponse(updated));
+        return updated is null ? NotFound() : Ok(_mapper.Map<DoctorScheduleDtos.Response>(updated));
     }
 
     [HttpDelete("{id:guid}")]
@@ -95,17 +84,4 @@ public class DoctorScheduleController : ControllerBase
         var deleted = await _repository.DeleteAsync(id);
         return deleted ? NoContent() : NotFound();
     }
-
-    private static DoctorScheduleDtos.Response MapResponse(DoctorScheduleEntity entity) => new()
-    {
-        Id = entity.Id,
-        DoctorId = entity.DoctorId,
-        DoctorName = entity.Doctor?.Name ?? string.Empty,
-        DayOfWeek = entity.DayOfWeek,
-        StartTime = entity.StartTime,
-        EndTime = entity.EndTime,
-        IsActive = entity.IsActive,
-        CreatedAt = entity.CreatedAt,
-        ModifiedAt = entity.ModifiedAt
-    };
 }

@@ -1,3 +1,4 @@
+using AutoMapper;
 using ClinicScheduling.Api.Common.Database.Entities;
 using ClinicScheduling.Api.Common.Dtos;
 using ClinicScheduling.Api.Models.IRepositories;
@@ -10,10 +11,12 @@ namespace ClinicScheduling.Api.Controllers;
 public class SpecialtyController : ControllerBase
 {
     private readonly ISpecialtyRepository _repository;
+    private readonly IMapper _mapper;
 
-    public SpecialtyController(ISpecialtyRepository repository)
+    public SpecialtyController(ISpecialtyRepository repository, IMapper mapper)
     {
         _repository = repository;
+        _mapper = mapper;
     }
 
     [HttpGet]
@@ -21,7 +24,7 @@ public class SpecialtyController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var specialties = await _repository.GetAllAsync();
-        return Ok(specialties.Select(MapResponse));
+        return Ok(_mapper.Map<IEnumerable<SpecialtyDtos.Response>>(specialties));
     }
 
     [HttpGet("{id:guid}")]
@@ -30,7 +33,7 @@ public class SpecialtyController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var specialty = await _repository.GetByIdAsync(id);
-        return specialty is null ? NotFound() : Ok(MapResponse(specialty));
+        return specialty is null ? NotFound() : Ok(_mapper.Map<SpecialtyDtos.Response>(specialty));
     }
 
     [HttpPost]
@@ -41,18 +44,11 @@ public class SpecialtyController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var entity = new SpecialtyEntity
-        {
-            Id = Guid.NewGuid(),
-            Name = request.Name,
-            AppointmentDurationMinutes = request.AppointmentDurationMinutes,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow,
-            IsActive = true
-        };
-
+        var entity = _mapper.Map<SpecialtyEntity>(request);
         var created = await _repository.CreateAsync(entity);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, MapResponse(created));
+
+        return CreatedAtAction(nameof(GetById), new { id = created.Id },
+            _mapper.Map<SpecialtyDtos.Response>(created));
     }
 
     [HttpPut("{id:guid}")]
@@ -68,13 +64,10 @@ public class SpecialtyController : ControllerBase
         if (existing is null)
             return NotFound();
 
-        existing.Name = request.Name;
-        existing.AppointmentDurationMinutes = request.AppointmentDurationMinutes;
-        existing.IsActive = request.IsActive;
-        existing.ModifiedAt = DateTime.UtcNow;
+        _mapper.Map(request, existing);
 
         var updated = await _repository.UpdateAsync(existing);
-        return updated is null ? NotFound() : Ok(MapResponse(updated));
+        return updated is null ? NotFound() : Ok(_mapper.Map<SpecialtyDtos.Response>(updated));
     }
 
     [HttpDelete("{id:guid}")]
@@ -85,14 +78,4 @@ public class SpecialtyController : ControllerBase
         var deleted = await _repository.DeleteAsync(id);
         return deleted ? NoContent() : NotFound();
     }
-
-    private static SpecialtyDtos.Response MapResponse(SpecialtyEntity entity) => new()
-    {
-        Id = entity.Id,
-        Name = entity.Name,
-        AppointmentDurationMinutes = entity.AppointmentDurationMinutes,
-        IsActive = entity.IsActive,
-        CreatedAt = entity.CreatedAt,
-        ModifiedAt = entity.ModifiedAt
-    };
 }
