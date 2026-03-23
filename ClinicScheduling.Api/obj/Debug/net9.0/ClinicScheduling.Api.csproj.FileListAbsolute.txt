@@ -165,3 +165,9 @@
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/obj/Debug/net9.0/ClinicScheduling.Api.pdb
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/obj/Debug/net9.0/ClinicScheduling.Api.genruntimeconfig.cache
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/obj/Debug/net9.0/ref/ClinicScheduling.Api.dll
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/obj/Debug/net9.0/ClinicScheduling.Api.sourcelink.json
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/bin/Debug/net9.0/Swashbuckle.AspNetCore.Swagger.dll
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerGen.dll
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerUI.dll
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/bin/Debug/net9.0/AutoMapper.dll
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/bin/Debug/net9.0/System.Diagnostics.DiagnosticSource.dll

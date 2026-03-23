@@ -9,6 +9,7 @@ builder.Services.AddJwtServices();
 builder.Services.AddRepositories();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddMapperProfiles(builder.Configuration);
 
 var app = builder.Build();
 
