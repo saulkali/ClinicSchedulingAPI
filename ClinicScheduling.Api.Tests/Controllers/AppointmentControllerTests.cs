@@ -51,6 +51,61 @@ public class AppointmentControllerTests
     }
 
     [Test]
+    public async Task Create_ShouldReturnCreated_WhenWithinDoctorSchedule()
+    {
+        var start = new DateTime(2026, 3, 23, 11, 0, 0, DateTimeKind.Utc);
+        var response = await _client.PostAsJsonAsync("/api/appointment", new AppointmentDtos.Create
+        {
+            DoctorId = _factory.ExistingDoctorId,
+            PatientId = _factory.ExistingPatientId,
+            StartDateTime = start,
+            EndDateTime = start.AddMinutes(30),
+            DurationMinutes = 30,
+            Status = "Scheduled"
+        });
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Created));
+    }
+
+    [Test]
+    public async Task Create_ShouldReturnBadRequest_WhenOutsideDoctorSchedule()
+    {
+        var start = new DateTime(2026, 3, 23, 12, 50, 0, DateTimeKind.Utc);
+        var response = await _client.PostAsJsonAsync("/api/appointment", new AppointmentDtos.Create
+        {
+            DoctorId = _factory.ExistingDoctorId,
+            PatientId = _factory.ExistingPatientId,
+            StartDateTime = start,
+            EndDateTime = start.AddMinutes(30),
+            DurationMinutes = 30,
+            Status = "Scheduled"
+        });
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.That(content, Does.Contain("horario laboral"));
+    }
+
+    [Test]
+    public async Task Create_ShouldReturnBadRequest_WhenDurationDoesNotMatchDoctorSpecialty()
+    {
+        var start = new DateTime(2026, 3, 23, 11, 30, 0, DateTimeKind.Utc);
+        var response = await _client.PostAsJsonAsync("/api/appointment", new AppointmentDtos.Create
+        {
+            DoctorId = _factory.ExistingDoctorId,
+            PatientId = _factory.ExistingPatientId,
+            StartDateTime = start,
+            EndDateTime = start.AddMinutes(20),
+            DurationMinutes = 20,
+            Status = "Scheduled"
+        });
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.That(content, Does.Contain("30 minutos"));
+    }
+
+    [Test]
     public async Task Update_ShouldReturnOk_WhenExists()
     {
         var start = new DateTime(2026, 4, 2, 11, 0, 0, DateTimeKind.Utc);
