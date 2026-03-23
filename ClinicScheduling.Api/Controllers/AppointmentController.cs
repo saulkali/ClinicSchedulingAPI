@@ -42,14 +42,19 @@ public class AppointmentController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        if (request.EndDateTime <= request.StartDateTime)
-            return BadRequest("EndDateTime debe ser mayor que StartDateTime.");
-
         var entity = _mapper.Map<AppointmentEntity>(request);
-        var created = await _repository.CreateAsync(entity);
 
-        return CreatedAtAction(nameof(GetById), new { id = created.Id },
-            _mapper.Map<AppointmentDtos.Response>(created));
+        try
+        {
+            var created = await _repository.CreateAsync(entity);
+
+            return CreatedAtAction(nameof(GetById), new { id = created.Id },
+                _mapper.Map<AppointmentDtos.Response>(created));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPut("{id:guid}")]

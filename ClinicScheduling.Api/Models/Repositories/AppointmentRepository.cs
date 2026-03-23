@@ -29,6 +29,48 @@ public class AppointmentRepository : IAppointmentRepository
 
     public async Task<AppointmentEntity> CreateAsync(AppointmentEntity entity)
     {
+        var doctor = await _dbContext.Doctors
+            .Include(x => x.Specialty)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == entity.DoctorId && x.IsActive);
+
+        if (doctor is null)
+            throw new InvalidOperationException("No se encontró un doctor activo para la cita.");
+
+        if (entity.EndDateTime <= entity.StartDateTime)
+            throw new InvalidOperationException("EndDateTime debe ser mayor que StartDateTime.");
+
+        var appointmentDuration = doctor.Specialty.AppointmentDurationMinutes;
+        var expectedEndDateTime = entity.StartDateTime.AddMinutes(appointmentDuration);
+
+        if (entity.DurationMinutes != 0 && entity.DurationMinutes != appointmentDuration)
+            throw new InvalidOperationException($"La duración de la cita para la especialidad del doctor debe ser de {appointmentDuration} minutos.");
+
+        if (entity.EndDateTime != expectedEndDateTime)
+            throw new InvalidOperationException($"La cita debe durar {appointmentDuration} minutos y finalizar a las {expectedEndDateTime:HH:mm}.");
+
+        var appointmentDayOfWeek = entity.StartDateTime.DayOfWeek == DayOfWeek.Sunday
+            ? 7
+            : (int)entity.StartDateTime.DayOfWeek;
+
+        var startTime = entity.StartDateTime.TimeOfDay;
+        var endTime = entity.EndDateTime.TimeOfDay;
+
+        var scheduleExists = await _dbContext.DoctorSchedules
+            .AsNoTracking()
+            .AnyAsync(x =>
+                x.DoctorId == entity.DoctorId &&
+                x.IsActive &&
+                x.DayOfWeek == appointmentDayOfWeek &&
+                startTime >= x.StartTime &&
+                endTime <= x.EndTime);
+
+        if (!scheduleExists)
+            throw new InvalidOperationException("No se puede agendar una cita con el doctor porque no está dentro del horario laboral registrado.");
+
+        entity.DurationMinutes = appointmentDuration;
+        entity.EndDateTime = expectedEndDateTime;
+
         _dbContext.Appointments.Add(entity);
         await _dbContext.SaveChangesAsync();
         return await GetByIdAsync(entity.Id) ?? entity;
