@@ -1,0 +1,75 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  buildConfiguration: 'Release'
+  vmPath: '/home/netnetwork/clinicscheduling-api'
+  imageName: 'clinicscheduling-api'
+  containerName: 'clinicscheduling-api'
+  projectFile: 'ClinicScheduling.Api.csproj'
+
+steps:
+- task: UseDotNet@2
+  displayName: 'Use .NET SDK 9'
+  inputs:
+    packageType: 'sdk'
+    version: '9.x'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Restore project'
+  inputs:
+    command: 'restore'
+    projects: '$(projectFile)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build project'
+  inputs:
+    command: 'build'
+    projects: '$(projectFile)'
+    arguments: '--configuration $(buildConfiguration) --no-restore'
+
+- task: CopyFilesOverSSH@0
+  displayName: 'Copy source files to server'
+  inputs:
+    sshEndpoint: 'netnetworkserverssh2'
+    sourceFolder: '$(Build.SourcesDirectory)'
+    contents: |
+      **
+      !**/.git/**
+      !**/bin/**
+      !**/obj/**
+      !**/.vs/**
+      !**/.idea/**
+    targetFolder: '$(vmPath)'
+    cleanTargetFolder: true
+    overwrite: true
+
+- task: SSH@0
+  displayName: 'Build image and run container'
+  inputs:
+    sshEndpoint: 'netnetworkserverssh2'
+    runOptions: 'inline'
+    inline: |
+      set -e
+
+      mkdir -p $(vmPath)
+      cd $(vmPath)
+
+      docker build -t $(imageName):latest .
+
+      docker stop $(containerName) || true
+      docker rm $(containerName) || true
+
+      docker run -d \
+        --name $(containerName) \
+        --restart unless-stopped \
+        -p 4444:8080 \
+        -e ASPNETCORE_ENVIRONMENT=Production \
+        -e ASPNETCORE_URLS=http://+:8080 \
+        $(imageName):latest
+
+      docker ps
+      docker image prune -f
