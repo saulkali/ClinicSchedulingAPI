@@ -38,6 +38,18 @@ public class AppointmentRepository : IAppointmentRepository
             .AsNoTracking()
             .ToListAsync();
 
+    public async Task<IEnumerable<AppointmentEntity>> GetByDoctorIdAsync(Guid doctorId)
+    {
+        var doctorIdParameter = new SqlParameter("@DoctorId", SqlDbType.UniqueIdentifier) { Value = doctorId };
+
+        return await _dbContext.Appointments
+            .FromSqlRaw("EXEC dbo.sp_GetAppointmentsByDoctor @DoctorId", doctorIdParameter)
+            .Include(x => x.Doctor)
+            .Include(x => x.Patient)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     // lo deje este metodo fue el primero en hacer las validaciones a nivel de linq y EF
     // abajo se dejo el que usa directamente el SP de sql server que paso a sustituir este metodo (eliminar esto se dejo con fines de prueba tecnica)
     // public async Task<AppointmentEntity> CreateAsync(AppointmentEntity entity)
