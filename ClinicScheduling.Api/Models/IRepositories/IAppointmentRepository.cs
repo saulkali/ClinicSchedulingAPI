@@ -1,4 +1,5 @@
 using ClinicScheduling.Api.Common.Database.Entities;
+using ClinicScheduling.Api.Common.Dtos;
 
 namespace ClinicScheduling.Api.Models.IRepositories;
 
@@ -8,6 +9,7 @@ public interface IAppointmentRepository
     Task<AppointmentEntity?> GetByIdAsync(Guid id);
     Task<IEnumerable<AppointmentEntity>> GetByPatientIdAsync(Guid patientId);
     Task<IEnumerable<AppointmentEntity>> GetByDoctorIdAsync(Guid doctorId);
+    Task<IEnumerable<AppointmentDtos.AppointmentAviableDoctorDto>> GetDoctorAvailabilityAsync(Guid doctorId, int dayOfWeek);
     Task<AppointmentEntity> CreateAsync(AppointmentEntity entity);
     Task<AppointmentEntity?> UpdateAsync(AppointmentEntity entity);
     Task<bool> DeleteAsync(Guid id);

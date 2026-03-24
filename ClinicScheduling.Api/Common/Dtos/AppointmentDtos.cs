@@ -90,4 +90,13 @@ public static class AppointmentDtos
         public string Status { get; set; } = null!;
         public bool IsActive { get; set; }
     }
+
+    public class AppointmentAviableDoctorDto
+    {
+        public Guid DoctorId { get; set; }
+        public int DayOfWeek { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public int DurationMinutes { get; set; }
+    }
 }

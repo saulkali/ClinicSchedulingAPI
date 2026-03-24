@@ -67,6 +67,33 @@ public class AppointmentControllerTests
     }
 
     [Test]
+    public async Task GetDoctorAvailability_ShouldReturnOkWithSlots_WhenValidDayOfWeek()
+    {
+        var response = await _client.GetAsync($"/api/appointment/doctor/{_factory.ExistingDoctorId}/availability/1");
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+        var payload = await response.Content.ReadFromJsonAsync<List<AppointmentDtos.AppointmentAviableDoctorDto>>();
+        Assert.That(payload, Is.Not.Null);
+        Assert.That(payload, Is.Not.Empty);
+
+        Assert.That(payload!.All(x => x.DoctorId == _factory.ExistingDoctorId), Is.True);
+        Assert.That(payload.All(x => x.DayOfWeek == 1), Is.True);
+        Assert.That(payload.All(x => x.DurationMinutes == 30), Is.True);
+        Assert.That(payload.First().StartTime, Is.EqualTo(new TimeSpan(9, 0, 0)));
+        Assert.That(payload.Last().EndTime, Is.EqualTo(new TimeSpan(13, 0, 0)));
+    }
+
+    [Test]
+    public async Task GetDoctorAvailability_ShouldReturnBadRequest_WhenDayOfWeekIsInvalid()
+    {
+        var response = await _client.GetAsync($"/api/appointment/doctor/{_factory.ExistingDoctorId}/availability/9");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.That(content, Does.Contain("dayOfWeek"));
+    }
+
+    [Test]
     public async Task Create_ShouldReturnBadRequest_WhenDateRangeIsInvalid()
     {
         var start = new DateTime(2026, 4, 1, 9, 0, 0, DateTimeKind.Utc);
