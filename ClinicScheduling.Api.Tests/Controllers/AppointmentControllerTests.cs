@@ -67,30 +67,31 @@ public class AppointmentControllerTests
     }
 
     [Test]
-    public async Task GetDoctorAvailability_ShouldReturnOkWithSlots_WhenValidDayOfWeek()
+    public async Task GetDoctorAvailability_ShouldReturnOkWithSlots_WhenValidDate()
     {
-        var response = await _client.GetAsync($"/api/appointment/doctor/{_factory.ExistingDoctorId}/availability/1");
+        var response = await _client.GetAsync($"/api/appointment/doctor/{_factory.ExistingDoctorId}/availability?date=2026-03-23");
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
-        var payload = await response.Content.ReadFromJsonAsync<List<AppointmentDtos.AppointmentAviableDoctorDto>>();
+        var payload = await response.Content.ReadFromJsonAsync<AppointmentDtos.AppointmentAviableDoctorDto>();
         Assert.That(payload, Is.Not.Null);
-        Assert.That(payload, Is.Not.Empty);
+        Assert.That(payload!.AvailableSlots, Is.Not.Empty);
 
-        Assert.That(payload!.All(x => x.DoctorId == _factory.ExistingDoctorId), Is.True);
-        Assert.That(payload.All(x => x.DayOfWeek == 1), Is.True);
-        Assert.That(payload.All(x => x.DurationMinutes == 30), Is.True);
-        Assert.That(payload.First().StartTime, Is.EqualTo(new TimeSpan(9, 0, 0)));
-        Assert.That(payload.Last().EndTime, Is.EqualTo(new TimeSpan(13, 0, 0)));
+        Assert.That(payload.DoctorId, Is.EqualTo(_factory.ExistingDoctorId));
+        Assert.That(payload.DayOfWeek, Is.EqualTo(1));
+        Assert.That(payload.DurationMinutes, Is.EqualTo(30));
+        Assert.That(payload.AvailableSlots.First().StartDateTime, Is.EqualTo(new DateTime(2026, 3, 23, 9, 0, 0)));
+        Assert.That(payload.AvailableSlots.Any(x => x.StartDateTime == new DateTime(2026, 3, 23, 10, 0, 0)), Is.False);
+        Assert.That(payload.AvailableSlots.Last().EndDateTime, Is.EqualTo(new DateTime(2026, 3, 23, 16, 0, 0)));
     }
 
     [Test]
-    public async Task GetDoctorAvailability_ShouldReturnBadRequest_WhenDayOfWeekIsInvalid()
+    public async Task GetDoctorAvailability_ShouldReturnBadRequest_WhenDateIsMissing()
     {
-        var response = await _client.GetAsync($"/api/appointment/doctor/{_factory.ExistingDoctorId}/availability/9");
+        var response = await _client.GetAsync($"/api/appointment/doctor/{_factory.ExistingDoctorId}/availability");
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
         var content = await response.Content.ReadAsStringAsync();
-        Assert.That(content, Does.Contain("dayOfWeek"));
+        Assert.That(content, Does.Contain("date"));
     }
 
     [Test]
@@ -130,7 +131,7 @@ public class AppointmentControllerTests
     [Test]
     public async Task Create_ShouldReturnBadRequest_WhenOutsideDoctorSchedule()
     {
-        var start = new DateTime(2026, 3, 23, 12, 50, 0, DateTimeKind.Utc);
+        var start = new DateTime(2026, 3, 23, 18, 50, 0, DateTimeKind.Utc);
         var response = await _client.PostAsJsonAsync("/api/appointment", new AppointmentDtos.Create
         {
             DoctorId = _factory.ExistingDoctorId,

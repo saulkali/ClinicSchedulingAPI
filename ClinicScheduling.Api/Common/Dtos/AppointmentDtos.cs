@@ -91,12 +91,18 @@ public static class AppointmentDtos
         public bool IsActive { get; set; }
     }
 
+    public class DoctorAvailableSlotDto
+    {
+        public DateTime StartDateTime { get; set; }
+        public DateTime EndDateTime { get; set; }
+    }
+
     public class AppointmentAviableDoctorDto
     {
         public Guid DoctorId { get; set; }
+        public DateTime Date { get; set; }
         public int DayOfWeek { get; set; }
-        public TimeSpan StartTime { get; set; }
-        public TimeSpan EndTime { get; set; }
         public int DurationMinutes { get; set; }
+        public List<DoctorAvailableSlotDto> AvailableSlots { get; set; } = [];
     }
 }
