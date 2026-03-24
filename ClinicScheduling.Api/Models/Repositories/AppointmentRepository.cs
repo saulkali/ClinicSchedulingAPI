@@ -1,6 +1,7 @@
 using System.Data;
 using ClinicScheduling.Api.Common.Database.Context;
 using ClinicScheduling.Api.Common.Database.Entities;
+using ClinicScheduling.Api.Common.Dtos;
 using ClinicScheduling.Api.Common.Enums;
 using ClinicScheduling.Api.Models.IRepositories;
 using Microsoft.Data.SqlClient;
@@ -48,6 +49,40 @@ public class AppointmentRepository : IAppointmentRepository
             .Include(x => x.Patient)
             .AsNoTracking()
             .ToListAsync();
+    }
+
+    public async Task<IEnumerable<AppointmentDtos.AppointmentAviableDoctorDto>> GetDoctorAvailabilityAsync(Guid doctorId, int dayOfWeek)
+    {
+        var doctorIdParameter = new SqlParameter("@DoctorId", SqlDbType.UniqueIdentifier) { Value = doctorId };
+        var dayOfWeekParameter = new SqlParameter("@DayOfWeek", SqlDbType.Int) { Value = dayOfWeek };
+
+        await using var connection = _dbContext.Database.GetDbConnection();
+
+        if (connection.State != ConnectionState.Open)
+            await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = "dbo.sp_GetDoctorAvailability";
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.Add(doctorIdParameter);
+        command.Parameters.Add(dayOfWeekParameter);
+
+        var availability = new List<AppointmentDtos.AppointmentAviableDoctorDto>();
+
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            availability.Add(new AppointmentDtos.AppointmentAviableDoctorDto
+            {
+                DoctorId = reader.GetGuid(reader.GetOrdinal("DoctorId")),
+                DayOfWeek = reader.GetInt32(reader.GetOrdinal("DayOfWeek")),
+                StartTime = reader.GetTimeSpan(reader.GetOrdinal("StartTime")),
+                EndTime = reader.GetTimeSpan(reader.GetOrdinal("EndTime")),
+                DurationMinutes = reader.GetInt32(reader.GetOrdinal("DurationMinutes"))
+            });
+        }
+
+        return availability;
     }
 
     // lo deje este metodo fue el primero en hacer las validaciones a nivel de linq y EF

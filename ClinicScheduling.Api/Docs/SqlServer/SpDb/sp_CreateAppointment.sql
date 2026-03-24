@@ -22,6 +22,8 @@ BEGIN TRANSACTION;
         DECLARE @AppointmentDayOfWeek INT;
         DECLARE @StartTime TIME;
         DECLARE @EndTime TIME;
+        DECLARE @StartMinutesOfDay INT;
+        DECLARE @EndMinutesOfDay INT;
 
         IF @CreatedAt IS NULL
             SET @CreatedAt = SYSUTCDATETIME();
@@ -63,6 +65,8 @@ IF @AppointmentDurationMinutes IS NULL
         SET @AppointmentDayOfWeek = DATEPART(WEEKDAY, @StartDateTime);
         SET @StartTime = CAST(@StartDateTime AS TIME);
         SET @EndTime = CAST(@ExpectedEndDateTime AS TIME);
+        SET @StartMinutesOfDay = DATEDIFF(MINUTE, CAST('00:00:00' AS TIME), @StartTime);
+        SET @EndMinutesOfDay = DATEDIFF(MINUTE, CAST('00:00:00' AS TIME), @EndTime);
 
         IF NOT EXISTS
         (
@@ -71,8 +75,8 @@ IF @AppointmentDurationMinutes IS NULL
             WHERE DS.DoctorId = @DoctorId
               AND DS.IsActive = 1
               AND DS.DayOfWeek = @AppointmentDayOfWeek
-              AND @StartTime >= DS.StartTime
-              AND @EndTime <= DS.EndTime
+              AND @StartMinutesOfDay >= DATEDIFF(MINUTE, CAST('00:00:00' AS TIME), DS.StartTime)
+              AND @EndMinutesOfDay <= DATEDIFF(MINUTE, CAST('00:00:00' AS TIME), DS.EndTime)
         )
             THROW 50005, 'No se puede agendar una cita con el doctor porque no está dentro del horario laboral registrado.', 1;
 

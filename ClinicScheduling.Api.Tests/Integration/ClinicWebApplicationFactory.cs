@@ -78,6 +78,13 @@ public class ClinicWebApplicationFactory : WebApplicationFactory<Program>
                 "SqlServer",
                 "SpDb",
                 "sp_GetAppointmentsByDoctor.sql")
+            ,Path.Combine(
+                solutionRoot,
+                "ClinicScheduling.Api",
+                "Docs",
+                "SqlServer",
+                "SpDb",
+                "sp_GetDoctorAvailability.sql")
         };
 
         foreach (var spPath in storedProcedurePaths)
