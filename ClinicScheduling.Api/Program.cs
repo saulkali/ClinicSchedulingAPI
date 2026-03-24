@@ -3,7 +3,7 @@ using ClinicScheduling.Api.Common.InjectionDependency;
 var builder = WebApplication.CreateBuilder(args);
 
 // injection dependency
-//builder.Services.AddClinicSchedulingDbContext(builder.Configuration);
+builder.Services.AddClinicSchedulingDbContext(builder.Configuration);
 builder.Services.AddJWTAuth(builder.Configuration);
 builder.Services.AddJwtServices();
 builder.Services.AddCorsInjection(builder.Configuration);

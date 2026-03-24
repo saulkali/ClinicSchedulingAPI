@@ -1,5 +1,6 @@
 using ClinicScheduling.Api.Common.Database.Context;
 using ClinicScheduling.Api.Common.Database.Entities;
+using ClinicScheduling.Api.Common.Enums;
 using ClinicScheduling.Api.Models.IRepositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -65,7 +66,20 @@ public class AppointmentRepository : IAppointmentRepository
             .FirstOrDefault() != null;
         if (!scheduleExists)
             throw new InvalidOperationException("No se puede agendar una cita con el doctor porque no está dentro del horario laboral registrado.");
+        
+        var appointmentConflict = await _dbContext.Appointments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x =>
+                x.IsActive &&
+                x.DoctorId == entity.DoctorId &&
+                x.Status == nameof(AppointmentStatus.Scheduled) &&
+                x.StartDateTime < expectedEndDateTime &&
+                x.EndDateTime > entity.StartDateTime);
 
+        if (appointmentConflict != null)
+            throw new InvalidOperationException(
+                "No se puede agendar la cita porque el doctor ya tiene una cita reservada en ese horario.");
+        
         entity.DurationMinutes = appointmentDuration;
         entity.EndDateTime = expectedEndDateTime;
 

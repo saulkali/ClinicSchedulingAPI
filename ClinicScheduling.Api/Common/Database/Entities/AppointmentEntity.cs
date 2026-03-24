@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using ClinicScheduling.Api.Common.Enums;
 
 namespace ClinicScheduling.Api.Common.Database.Entities;
 
@@ -26,7 +27,7 @@ public class AppointmentEntity:BaseEntity
 
     [Required]
     [MaxLength(50)]
-    public string Status { get; set; } = "Scheduled";
+    public string Status { get; set; } = nameof(AppointmentStatus.Scheduled);
 
     [MaxLength(300)]
     public string? CancellationReason { get; set; }
