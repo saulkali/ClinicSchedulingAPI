@@ -1,18 +1,21 @@
+using System.Data;
+using System.Text.RegularExpressions;
 using ClinicScheduling.Api.Common.Database.Context;
 using ClinicScheduling.Api.Common.Database.Entities;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Data.Sqlite;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
 
 namespace ClinicScheduling.Api.Tests.Integration;
 
 public class ClinicWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private SqliteConnection? _connection;
+    private string? _testConnectionString;
+    private string? _masterConnectionString;
+    private string? _databaseName;
 
     public Guid ExistingRoleId { get; private set; }
     public Guid ExistingSecondaryRoleId { get; private set; }
@@ -33,10 +36,15 @@ public class ClinicWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<DbContextOptions<ClinicSchedulingDbContext>>();
             services.RemoveAll<ClinicSchedulingDbContext>();
 
-            _connection = new SqliteConnection("DataSource=:memory:");
-            _connection.Open();
+            var serverConnectionString =
+                "Server=localhost,1433;User Id=sa;Password=Developer123;TrustServerCertificate=True;MultipleActiveResultSets=True;";
 
-            services.AddDbContext<ClinicSchedulingDbContext>(options => options.UseSqlite(_connection));
+            _databaseName = $"ClinicSchedulingTests_{Guid.NewGuid():N}";
+            _masterConnectionString = $"{serverConnectionString}Database=master;";
+            _testConnectionString = $"{serverConnectionString}Database={_databaseName};";
+
+            services.AddDbContext<ClinicSchedulingDbContext>(options =>
+                options.UseSqlServer(_testConnectionString));
 
             var serviceProvider = services.BuildServiceProvider();
 
@@ -46,8 +54,61 @@ public class ClinicWebApplicationFactory : WebApplicationFactory<Program>
             dbContext.Database.EnsureDeleted();
             dbContext.Database.EnsureCreated();
 
+            CreateStoredProcedures(dbContext);
             SeedData(dbContext);
         });
+    }
+
+    private void CreateStoredProcedures(ClinicSchedulingDbContext dbContext)
+    {
+        var solutionRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../"));
+        var spPath = Path.Combine(
+            solutionRoot,
+            "ClinicScheduling.Api",
+            "Docs",
+            "SqlServer",
+            "SpDb",
+            "sp_CreateAppointment.sql"
+        );
+
+        if (!File.Exists(spPath))
+            throw new FileNotFoundException($"No se encontró el archivo del stored procedure en: {spPath}");
+
+        var script = File.ReadAllText(spPath);
+
+        ExecuteSqlScriptInBatches(dbContext, script);
+    }
+
+    private static void ExecuteSqlScriptInBatches(ClinicSchedulingDbContext dbContext, string script)
+    {
+        var batches = Regex.Split(
+                script,
+                @"^\s*GO\s*;$|^\s*GO\s*$",
+                RegexOptions.Multiline | RegexOptions.IgnoreCase)
+            .Where(batch => !string.IsNullOrWhiteSpace(batch))
+            .ToList();
+
+        var connection = (SqlConnection)dbContext.Database.GetDbConnection();
+
+        var shouldClose = connection.State != ConnectionState.Open;
+        if (shouldClose)
+            connection.Open();
+
+        try
+        {
+            foreach (var batch in batches)
+            {
+                using var command = connection.CreateCommand();
+                command.CommandText = batch;
+                command.CommandType = CommandType.Text;
+                command.ExecuteNonQuery();
+            }
+        }
+        finally
+        {
+            if (shouldClose)
+                connection.Close();
+        }
     }
 
     private void SeedData(ClinicSchedulingDbContext dbContext)
@@ -194,8 +255,26 @@ public class ClinicWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
-            _connection?.Dispose();
+        if (disposing && !string.IsNullOrWhiteSpace(_masterConnectionString) && !string.IsNullOrWhiteSpace(_databaseName))
+        {
+            try
+            {
+                using var connection = new SqlConnection(_masterConnectionString);
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = $@"
+IF DB_ID('{_databaseName}') IS NOT NULL
+BEGIN
+    ALTER DATABASE [{_databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [{_databaseName}];
+END";
+                command.ExecuteNonQuery();
+            }
+            catch
+            {
+            }
+        }
 
         base.Dispose(disposing);
     }
