@@ -54,7 +54,8 @@ public class AppointmentController : ControllerBase
     public async Task<IActionResult> GetByPatientId(Guid patientId)
     {
         var appointments = await _repository.GetByPatientIdAsync(patientId);
-        return Ok(_mapper.Map<IEnumerable<AppointmentDtos.Response>>(appointments));
+        var response = _mapper.Map<IEnumerable<AppointmentDtos.Response>>(appointments);
+        return Ok(response);
     }
 
     /// <summary>
@@ -66,7 +67,8 @@ public class AppointmentController : ControllerBase
     public async Task<IActionResult> GetByDoctorId(Guid doctorId)
     {
         var appointments = await _repository.GetByDoctorIdAsync(doctorId);
-        return Ok(_mapper.Map<IEnumerable<AppointmentDtos.Response>>(appointments));
+        var response = _mapper.Map<IEnumerable<AppointmentDtos.DoctorBusySlotResponse>>(appointments);
+        return Ok(response);
     }
 
     /// <summary>

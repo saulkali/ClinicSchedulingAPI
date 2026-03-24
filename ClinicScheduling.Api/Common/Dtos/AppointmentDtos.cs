@@ -79,4 +79,15 @@ public static class AppointmentDtos
         public DateTime CreatedAt { get; set; }
         public DateTime ModifiedAt { get; set; }
     }
+
+    public class DoctorBusySlotResponse
+    {
+        public Guid Id { get; set; }
+        public Guid DoctorId { get; set; }
+        public DateTime StartDateTime { get; set; }
+        public DateTime EndDateTime { get; set; }
+        public int DurationMinutes { get; set; }
+        public string Status { get; set; } = null!;
+        public bool IsActive { get; set; }
+    }
 }

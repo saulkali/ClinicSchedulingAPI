@@ -14,6 +14,8 @@ public class AppointmentProfileMapper:Profile
             .ForMember(dest => dest.PatientName,
                 opt => opt.MapFrom(src => src.Patient != null ? src.Patient.Name : string.Empty));
 
+        CreateMap<AppointmentEntity, AppointmentDtos.DoctorBusySlotResponse>();
+
         CreateMap<AppointmentDtos.Create, AppointmentEntity>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(_ => Guid.NewGuid()))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))

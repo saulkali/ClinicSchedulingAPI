@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using ClinicScheduling.Api.Common.Dtos;
 using ClinicScheduling.Api.Tests.Integration;
 using NUnit.Framework;
@@ -51,10 +52,18 @@ public class AppointmentControllerTests
         var response = await _client.GetAsync($"/api/appointment/doctor/{_factory.ExistingDoctorId}");
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
-        var payload = await response.Content.ReadFromJsonAsync<List<AppointmentDtos.Response>>();
-        Assert.That(payload, Is.Not.Null);
-        Assert.That(payload, Is.Not.Empty);
-        Assert.That(payload!.Any(x => x.DoctorId == _factory.ExistingDoctorId), Is.True);
+        var content = await response.Content.ReadAsStringAsync();
+        using var json = JsonDocument.Parse(content);
+
+        Assert.That(json.RootElement.ValueKind, Is.EqualTo(JsonValueKind.Array));
+        Assert.That(json.RootElement.GetArrayLength(), Is.GreaterThan(0));
+
+        var firstAppointment = json.RootElement[0];
+        Assert.That(firstAppointment.TryGetProperty("doctorId", out var doctorIdProperty), Is.True);
+        Assert.That(doctorIdProperty.GetGuid(), Is.EqualTo(_factory.ExistingDoctorId));
+        Assert.That(firstAppointment.TryGetProperty("reason", out _), Is.False);
+        Assert.That(firstAppointment.TryGetProperty("cancellationReason", out _), Is.False);
+        Assert.That(firstAppointment.TryGetProperty("patientId", out _), Is.False);
     }
 
     [Test]
