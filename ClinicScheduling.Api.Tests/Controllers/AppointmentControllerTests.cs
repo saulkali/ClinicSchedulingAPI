@@ -106,6 +106,44 @@ public class AppointmentControllerTests
     }
 
     [Test]
+    public async Task Create_ShouldReturnBadRequest_WhenDoctorHasAppointmentAtSameTime()
+    {
+        var start = new DateTime(2026, 3, 23, 10, 0, 0, DateTimeKind.Utc);
+        var response = await _client.PostAsJsonAsync("/api/appointment", new AppointmentDtos.Create
+        {
+            DoctorId = _factory.ExistingDoctorId,
+            PatientId = _factory.ExistingPatientId,
+            StartDateTime = start,
+            EndDateTime = start.AddMinutes(30),
+            DurationMinutes = 30,
+            Status = "Scheduled"
+        });
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.That(content, Does.Contain("ya tiene una cita reservada en ese horario"));
+    }
+
+    [Test]
+    public async Task Create_ShouldReturnBadRequest_WhenDoctorAppointmentOverlapsExistingOne()
+    {
+        var start = new DateTime(2026, 3, 23, 10, 15, 0, DateTimeKind.Utc);
+        var response = await _client.PostAsJsonAsync("/api/appointment", new AppointmentDtos.Create
+        {
+            DoctorId = _factory.ExistingDoctorId,
+            PatientId = _factory.ExistingPatientId,
+            StartDateTime = start,
+            EndDateTime = start.AddMinutes(30),
+            DurationMinutes = 30,
+            Status = "Scheduled"
+        });
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.That(content, Does.Contain("ya tiene una cita reservada en ese horario"));
+    }
+
+    [Test]
     public async Task Update_ShouldReturnOk_WhenExists()
     {
         var start = new DateTime(2026, 4, 2, 11, 0, 0, DateTimeKind.Utc);
