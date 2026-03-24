@@ -66,6 +66,7 @@ public class AppointmentRepository : IAppointmentRepository
 
     public async Task<AppointmentDtos.AppointmentAviableDoctorDto> GetDoctorAvailabilityAsync(Guid doctorId, DateTime date)
     {
+    
         var doctorIdParameter = new SqlParameter("@DoctorId", SqlDbType.UniqueIdentifier) { Value = doctorId };
         var dateParameter = new SqlParameter("@Date", SqlDbType.Date) { Value = date.Date };
 
@@ -100,7 +101,6 @@ public class AppointmentRepository : IAppointmentRepository
                 EndDateTime = reader.GetDateTime(reader.GetOrdinal("EndDateTime"))
             });
         }
-
         return result;
     }
 

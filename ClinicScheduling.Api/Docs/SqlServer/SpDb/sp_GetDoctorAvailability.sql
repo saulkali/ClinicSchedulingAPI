@@ -2,8 +2,7 @@ CREATE OR ALTER PROCEDURE dbo.sp_GetDoctorAvailability
     @DoctorId UNIQUEIDENTIFIER,
     @Date DATE
     AS
-BEGIN
-    SET NOCOUNT ON;
+BEGIN    
 
     IF @Date IS NULL
         THROW 50011, 'Date es requerido.', 1;
@@ -77,4 +76,3 @@ IF @AppointmentDurationMinutes IS NULL
      ORDER BY StartDateTime
      OPTION (MAXRECURSION 300);
 END
-GO
