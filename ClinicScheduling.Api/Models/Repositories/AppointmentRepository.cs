@@ -41,10 +41,23 @@ public class AppointmentRepository : IAppointmentRepository
 
     public async Task<IEnumerable<AppointmentEntity>> GetByDoctorIdAsync(Guid doctorId)
     {
-        var doctorIdParameter = new SqlParameter("@DoctorId", SqlDbType.UniqueIdentifier) { Value = doctorId };
+        var doctorIdParameter = new SqlParameter("@DoctorId", SqlDbType.UniqueIdentifier)
+        {
+            Value = doctorId
+        };
+
+        var appointments = await _dbContext.Appointments
+            .FromSqlRaw("EXEC dbo.sp_GetAppointmentsByDoctor @DoctorId", doctorIdParameter)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var appointmentIds = appointments.Select(x => x.Id).ToList();
+
+        if (!appointmentIds.Any())
+            return appointments;
 
         return await _dbContext.Appointments
-            .FromSqlRaw("EXEC dbo.sp_GetAppointmentsByDoctor @DoctorId", doctorIdParameter)
+            .Where(x => appointmentIds.Contains(x.Id))
             .Include(x => x.Doctor)
             .Include(x => x.Patient)
             .AsNoTracking()
@@ -76,8 +89,8 @@ public class AppointmentRepository : IAppointmentRepository
             {
                 DoctorId = reader.GetGuid(reader.GetOrdinal("DoctorId")),
                 DayOfWeek = reader.GetInt32(reader.GetOrdinal("DayOfWeek")),
-                StartTime = reader.GetTimeSpan(reader.GetOrdinal("StartTime")),
-                EndTime = reader.GetTimeSpan(reader.GetOrdinal("EndTime")),
+                StartTime = reader.GetFieldValue<TimeSpan>(reader.GetOrdinal("StartTime")),
+                EndTime = reader.GetFieldValue<TimeSpan>(reader.GetOrdinal("EndTime")),
                 DurationMinutes = reader.GetInt32(reader.GetOrdinal("DurationMinutes"))
             });
         }
