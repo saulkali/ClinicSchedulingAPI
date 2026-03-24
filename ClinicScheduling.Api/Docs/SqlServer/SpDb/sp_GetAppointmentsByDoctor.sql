@@ -1,8 +1,7 @@
 CREATE OR ALTER PROCEDURE dbo.sp_GetAppointmentsByDoctor
     @DoctorId UNIQUEIDENTIFIER
 AS
-BEGIN
-    SET NOCOUNT ON;
+BEGIN    
 
     SELECT
         A.Id,

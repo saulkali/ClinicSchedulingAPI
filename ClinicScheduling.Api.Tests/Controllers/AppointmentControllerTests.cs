@@ -131,7 +131,7 @@ public class AppointmentControllerTests
     [Test]
     public async Task Create_ShouldReturnBadRequest_WhenOutsideDoctorSchedule()
     {
-        var start = new DateTime(2026, 3, 23, 12, 50, 0, DateTimeKind.Utc);
+        var start = new DateTime(2026, 3, 23, 18, 50, 0, DateTimeKind.Utc);
         var response = await _client.PostAsJsonAsync("/api/appointment", new AppointmentDtos.Create
         {
             DoctorId = _factory.ExistingDoctorId,

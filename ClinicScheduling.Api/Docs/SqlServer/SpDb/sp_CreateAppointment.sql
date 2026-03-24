@@ -10,9 +10,8 @@ CREATE OR ALTER PROCEDURE dbo.sp_CreateAppointment
     @ModifiedAt DATETIME2 = NULL,
     @IsActive BIT = 1
     AS
-BEGIN
-    SET NOCOUNT ON;
-    SET XACT_ABORT ON;
+BEGIN    
+
 
 BEGIN TRY
 BEGIN TRANSACTION;
