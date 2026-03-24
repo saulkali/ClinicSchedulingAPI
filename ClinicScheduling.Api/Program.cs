@@ -9,16 +9,22 @@ builder.Services.AddJwtServices();
 builder.Services.AddCorsInjection(builder.Configuration);
 builder.Services.AddRepositories();
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.CustomSchemaIds(type => type.FullName);
+});
 builder.Services.AddMapperProfiles(builder.Configuration);
 
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+//if (app.Environment.IsDevelopment())
+//{
+app.UseSwagger();
+app.UseSwaggerUI();
+//}
+
 
 app.UseHttpsRedirection();
 
