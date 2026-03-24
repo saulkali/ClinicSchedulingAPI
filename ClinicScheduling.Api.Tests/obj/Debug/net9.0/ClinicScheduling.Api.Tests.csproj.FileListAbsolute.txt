@@ -150,7 +150,6 @@
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/refs/System.Data.dll
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/refs/System.Diagnostics.Contracts.dll
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/refs/System.Diagnostics.Debug.dll
-/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/refs/System.Diagnostics.DiagnosticSource.dll
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/refs/System.Diagnostics.FileVersionInfo.dll
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/refs/System.Diagnostics.Process.dll
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/refs/System.Diagnostics.StackTrace.dll
@@ -544,3 +543,10 @@
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/obj/Debug/net9.0/ClinicScheduling.Api.Tests.pdb
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/obj/Debug/net9.0/ClinicScheduling.Api.Tests.genruntimeconfig.cache
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/obj/Debug/net9.0/ref/ClinicScheduling.Api.Tests.dll
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/AutoMapper.dll
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/Swashbuckle.AspNetCore.Swagger.dll
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerGen.dll
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerUI.dll
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/System.Diagnostics.DiagnosticSource.dll
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/bin/Debug/net9.0/ClinicScheduling.Api.xml
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api.Tests/obj/Debug/net9.0/ClinicScheduling.Api.Tests.sourcelink.json
