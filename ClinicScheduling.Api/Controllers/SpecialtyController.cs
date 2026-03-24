@@ -19,6 +19,10 @@ public class SpecialtyController : ControllerBase
         _mapper = mapper;
     }
 
+    /// <summary>
+    /// Obtiene todas las especialidades médicas registradas.
+    /// </summary>
+    /// <returns>Listado de especialidades.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<SpecialtyDtos.Response>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
@@ -27,6 +31,11 @@ public class SpecialtyController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<SpecialtyDtos.Response>>(specialties));
     }
 
+    /// <summary>
+    /// Obtiene una especialidad médica por su identificador.
+    /// </summary>
+    /// <param name="id">Identificador único de la especialidad.</param>
+    /// <returns>La especialidad encontrada o un resultado 404 si no existe.</returns>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(SpecialtyDtos.Response), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -36,6 +45,11 @@ public class SpecialtyController : ControllerBase
         return specialty is null ? NotFound() : Ok(_mapper.Map<SpecialtyDtos.Response>(specialty));
     }
 
+    /// <summary>
+    /// Crea una nueva especialidad médica.
+    /// </summary>
+    /// <param name="request">Datos de la especialidad a registrar.</param>
+    /// <returns>La especialidad creada.</returns>
     [HttpPost]
     [ProducesResponseType(typeof(SpecialtyDtos.Response), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -51,6 +65,12 @@ public class SpecialtyController : ControllerBase
             _mapper.Map<SpecialtyDtos.Response>(created));
     }
 
+    /// <summary>
+    /// Actualiza una especialidad médica existente.
+    /// </summary>
+    /// <param name="id">Identificador único de la especialidad a actualizar.</param>
+    /// <param name="request">Nuevos datos de la especialidad.</param>
+    /// <returns>La especialidad actualizada o un resultado 404 si no existe.</returns>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(SpecialtyDtos.Response), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -70,6 +90,11 @@ public class SpecialtyController : ControllerBase
         return updated is null ? NotFound() : Ok(_mapper.Map<SpecialtyDtos.Response>(updated));
     }
 
+    /// <summary>
+    /// Elimina una especialidad médica por su identificador.
+    /// </summary>
+    /// <param name="id">Identificador único de la especialidad a eliminar.</param>
+    /// <returns>204 si se elimina correctamente o 404 si no existe.</returns>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

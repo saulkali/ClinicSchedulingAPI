@@ -21,10 +21,10 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// 
+    /// Autentica a un usuario con su correo y contraseña para generar un token JWT.
     /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
+    /// <param name="request">Credenciales de acceso del usuario.</param>
+    /// <returns>Información del usuario autenticado junto con el token de sesión.</returns>
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthDtos.LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
