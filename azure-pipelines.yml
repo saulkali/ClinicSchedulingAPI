@@ -64,7 +64,7 @@ steps:
       set -e
 
       mkdir -p $(vmPath)
-      cd $(vmPath)
+      cd $(vmPath)/ClinicScheduling.Api
 
       docker build -t $(imageName):latest .
 
