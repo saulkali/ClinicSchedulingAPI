@@ -1,0 +1,277 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ClinicScheduling.Api</name>
+    </assembly>
+    <members>
+        <member name="P:ClinicScheduling.Api.Common.Database.Entities.DoctorScheduleEntity.DayOfWeek">
+            <summary>
+            1 = Monday ... 7 = Sunday
+            </summary>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.AppointmentController.GetAll">
+            <summary>
+            Obtiene la lista completa de citas registradas en el sistema.
+            </summary>
+            <returns>Listado de citas médicas.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.AppointmentController.GetById(System.Guid)">
+            <summary>
+            Obtiene el detalle de una cita específica mediante su identificador.
+            </summary>
+            <param name="id">Identificador único de la cita.</param>
+            <returns>La cita encontrada o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.AppointmentController.Create(ClinicScheduling.Api.Common.Dtos.AppointmentDtos.Create)">
+            <summary>
+            Crea una nueva cita médica con la información enviada en la solicitud.
+            </summary>
+            <param name="request">Datos necesarios para registrar la cita.</param>
+            <returns>La cita creada con su identificador generado.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.AppointmentController.Update(System.Guid,ClinicScheduling.Api.Common.Dtos.AppointmentDtos.Update)">
+            <summary>
+            Actualiza la información de una cita existente.
+            </summary>
+            <param name="id">Identificador único de la cita a actualizar.</param>
+            <param name="request">Nuevos datos de la cita.</param>
+            <returns>La cita actualizada o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.AppointmentController.Delete(System.Guid)">
+            <summary>
+            Elimina una cita médica del sistema por su identificador.
+            </summary>
+            <param name="id">Identificador único de la cita a eliminar.</param>
+            <returns>204 si se elimina correctamente o 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.AuthController.Login(ClinicScheduling.Api.Common.Dtos.AuthDtos.LoginRequest)">
+            <summary>
+            Autentica a un usuario con su correo y contraseña para generar un token JWT.
+            </summary>
+            <param name="request">Credenciales de acceso del usuario.</param>
+            <returns>Información del usuario autenticado junto con el token de sesión.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.DoctorController.GetAll">
+            <summary>
+            Obtiene la lista de todos los doctores registrados.
+            </summary>
+            <returns>Listado de doctores.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.DoctorController.GetById(System.Guid)">
+            <summary>
+            Obtiene un doctor específico por su identificador.
+            </summary>
+            <param name="id">Identificador único del doctor.</param>
+            <returns>El doctor encontrado o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.DoctorController.Create(ClinicScheduling.Api.Common.Dtos.DoctorDtos.Create)">
+            <summary>
+            Crea un nuevo registro de doctor.
+            </summary>
+            <param name="request">Datos del doctor a registrar.</param>
+            <returns>El doctor creado.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.DoctorController.Update(System.Guid,ClinicScheduling.Api.Common.Dtos.DoctorDtos.Update)">
+            <summary>
+            Actualiza los datos de un doctor existente.
+            </summary>
+            <param name="id">Identificador único del doctor a actualizar.</param>
+            <param name="request">Nuevos datos del doctor.</param>
+            <returns>El doctor actualizado o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.DoctorController.Delete(System.Guid)">
+            <summary>
+            Elimina un doctor por su identificador.
+            </summary>
+            <param name="id">Identificador único del doctor a eliminar.</param>
+            <returns>204 si se elimina correctamente o 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.DoctorScheduleController.GetAll">
+            <summary>
+            Obtiene todos los horarios de atención médica registrados.
+            </summary>
+            <returns>Listado de horarios de doctores.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.DoctorScheduleController.GetById(System.Guid)">
+            <summary>
+            Obtiene el detalle de un horario de doctor por su identificador.
+            </summary>
+            <param name="id">Identificador único del horario.</param>
+            <returns>El horario encontrado o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.DoctorScheduleController.Create(ClinicScheduling.Api.Common.Dtos.DoctorScheduleDtos.Create)">
+            <summary>
+            Crea un nuevo horario de atención para un doctor.
+            </summary>
+            <param name="request">Datos del horario a registrar.</param>
+            <returns>El horario creado.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.DoctorScheduleController.Update(System.Guid,ClinicScheduling.Api.Common.Dtos.DoctorScheduleDtos.Update)">
+            <summary>
+            Actualiza la información de un horario de doctor existente.
+            </summary>
+            <param name="id">Identificador único del horario a actualizar.</param>
+            <param name="request">Nuevos datos del horario.</param>
+            <returns>El horario actualizado o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.DoctorScheduleController.Delete(System.Guid)">
+            <summary>
+            Elimina un horario de doctor por su identificador.
+            </summary>
+            <param name="id">Identificador único del horario a eliminar.</param>
+            <returns>204 si se elimina correctamente o 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.PatientController.GetAll">
+            <summary>
+            Obtiene la lista de pacientes registrados.
+            </summary>
+            <returns>Listado de pacientes.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.PatientController.GetById(System.Guid)">
+            <summary>
+            Obtiene un paciente por su identificador.
+            </summary>
+            <param name="id">Identificador único del paciente.</param>
+            <returns>El paciente encontrado o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.PatientController.Create(ClinicScheduling.Api.Common.Dtos.PatientDtos.Create)">
+            <summary>
+            Crea un nuevo paciente en el sistema.
+            </summary>
+            <param name="request">Datos del paciente a registrar.</param>
+            <returns>El paciente creado.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.PatientController.Update(System.Guid,ClinicScheduling.Api.Common.Dtos.PatientDtos.Update)">
+            <summary>
+            Actualiza la información de un paciente existente.
+            </summary>
+            <param name="id">Identificador único del paciente a actualizar.</param>
+            <param name="request">Nuevos datos del paciente.</param>
+            <returns>El paciente actualizado o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.PatientController.Delete(System.Guid)">
+            <summary>
+            Elimina un paciente por su identificador.
+            </summary>
+            <param name="id">Identificador único del paciente a eliminar.</param>
+            <returns>204 si se elimina correctamente o 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.RoleController.GetAll">
+            <summary>
+            Obtiene todos los roles disponibles en la aplicación.
+            </summary>
+            <returns>Listado de roles.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.RoleController.GetById(System.Guid)">
+            <summary>
+            Obtiene un rol específico por su identificador.
+            </summary>
+            <param name="id">Identificador único del rol.</param>
+            <returns>El rol encontrado o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.RoleController.Create(ClinicScheduling.Api.Common.Dtos.RoleDtos.Create)">
+            <summary>
+            Crea un nuevo rol dentro del sistema.
+            </summary>
+            <param name="request">Datos del rol a registrar.</param>
+            <returns>El rol creado.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.RoleController.Update(System.Guid,ClinicScheduling.Api.Common.Dtos.RoleDtos.Update)">
+            <summary>
+            Actualiza un rol existente por su identificador.
+            </summary>
+            <param name="id">Identificador único del rol a actualizar.</param>
+            <param name="request">Nuevos datos del rol.</param>
+            <returns>El rol actualizado o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.RoleController.Delete(System.Guid)">
+            <summary>
+            Elimina un rol por su identificador.
+            </summary>
+            <param name="id">Identificador único del rol a eliminar.</param>
+            <returns>204 si se elimina correctamente o 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.SpecialtyController.GetAll">
+            <summary>
+            Obtiene todas las especialidades médicas registradas.
+            </summary>
+            <returns>Listado de especialidades.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.SpecialtyController.GetById(System.Guid)">
+            <summary>
+            Obtiene una especialidad médica por su identificador.
+            </summary>
+            <param name="id">Identificador único de la especialidad.</param>
+            <returns>La especialidad encontrada o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.SpecialtyController.Create(ClinicScheduling.Api.Common.Dtos.SpecialtyDtos.Create)">
+            <summary>
+            Crea una nueva especialidad médica.
+            </summary>
+            <param name="request">Datos de la especialidad a registrar.</param>
+            <returns>La especialidad creada.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.SpecialtyController.Update(System.Guid,ClinicScheduling.Api.Common.Dtos.SpecialtyDtos.Update)">
+            <summary>
+            Actualiza una especialidad médica existente.
+            </summary>
+            <param name="id">Identificador único de la especialidad a actualizar.</param>
+            <param name="request">Nuevos datos de la especialidad.</param>
+            <returns>La especialidad actualizada o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.SpecialtyController.Delete(System.Guid)">
+            <summary>
+            Elimina una especialidad médica por su identificador.
+            </summary>
+            <param name="id">Identificador único de la especialidad a eliminar.</param>
+            <returns>204 si se elimina correctamente o 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.UserController.GetAll">
+            <summary>
+            Obtiene todos los usuarios registrados en la plataforma.
+            </summary>
+            <returns>Listado de usuarios.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.UserController.GetById(System.Guid)">
+            <summary>
+            Obtiene un usuario específico por su identificador.
+            </summary>
+            <param name="id">Identificador único del usuario.</param>
+            <returns>El usuario encontrado o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.UserController.Create(ClinicScheduling.Api.Common.Dtos.UserDtos.Create)">
+            <summary>
+            Crea un nuevo usuario con su información base y contraseña inicial.
+            </summary>
+            <param name="request">Datos del usuario a registrar.</param>
+            <returns>El usuario creado.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.UserController.Update(System.Guid,ClinicScheduling.Api.Common.Dtos.UserDtos.Update)">
+            <summary>
+            Actualiza la información de un usuario existente.
+            </summary>
+            <param name="id">Identificador único del usuario a actualizar.</param>
+            <param name="request">Nuevos datos del usuario.</param>
+            <returns>El usuario actualizado o un resultado 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Controllers.UserController.Delete(System.Guid)">
+            <summary>
+            Elimina un usuario por su identificador.
+            </summary>
+            <param name="id">Identificador único del usuario a eliminar.</param>
+            <returns>204 si se elimina correctamente o 404 si no existe.</returns>
+        </member>
+        <member name="M:ClinicScheduling.Api.Models.Repositories.AuthRepository.GetUserByEmailAsync(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="email"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Program">
+            <summary>
+            is necesary for unittesting
+            </summary>
+        </member>
+    </members>
+</doc>

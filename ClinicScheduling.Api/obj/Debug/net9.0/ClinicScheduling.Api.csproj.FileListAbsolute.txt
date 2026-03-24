@@ -171,3 +171,5 @@
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerUI.dll
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/bin/Debug/net9.0/AutoMapper.dll
 /home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/bin/Debug/net9.0/System.Diagnostics.DiagnosticSource.dll
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/bin/Debug/net9.0/ClinicScheduling.Api.xml
+/home/facker/RiderProjects/ClinicScheduling.Api/ClinicScheduling.Api/obj/Debug/net9.0/ClinicScheduling.Api.xml
