@@ -9,7 +9,8 @@ builder.Services.AddJwtServices();
 builder.Services.AddCorsInjection(builder.Configuration);
 builder.Services.AddRepositories();
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 builder.Services.AddMapperProfiles(builder.Configuration);
 
 
@@ -17,7 +18,8 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
