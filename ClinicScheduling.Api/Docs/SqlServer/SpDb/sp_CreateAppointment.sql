@@ -45,7 +45,16 @@ IF @AppointmentDurationMinutes IS NULL
         SET @ExpectedEndDateTime = DATEADD(MINUTE, @AppointmentDurationMinutes, @StartDateTime);
 
         IF @DurationMinutes <> 0 AND @DurationMinutes <> @AppointmentDurationMinutes
-            THROW 50003, 'La duración de la cita para la especialidad del doctor no es válida.', 1;
+        BEGIN
+            DECLARE @DurationMessage NVARCHAR(200);
+        
+            SET @DurationMessage =
+                N'La duración de la cita para la especialidad del doctor debe ser de '
+                + CAST(@AppointmentDurationMinutes AS NVARCHAR(10))
+                + N' minutos.';
+        
+            THROW 50003, @DurationMessage, 1;
+        END
 
         IF @EndDateTime <> @ExpectedEndDateTime
             THROW 50004, 'La hora de fin no coincide con la duración esperada de la cita.', 1;
