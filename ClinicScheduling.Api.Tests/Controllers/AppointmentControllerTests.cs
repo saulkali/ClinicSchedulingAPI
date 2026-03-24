@@ -113,7 +113,7 @@ public class AppointmentControllerTests
     [Test]
     public async Task Create_ShouldReturnCreated_WhenWithinDoctorSchedule()
     {
-        var start = new DateTime(2026, 3, 23, 11, 0, 0, DateTimeKind.Utc);
+        var start = new DateTime(2026, 3, 23, 13, 0, 0, DateTimeKind.Utc);
         var response = await _client.PostAsJsonAsync("/api/appointment", new AppointmentDtos.Create
         {
             DoctorId = _factory.ExistingDoctorId,

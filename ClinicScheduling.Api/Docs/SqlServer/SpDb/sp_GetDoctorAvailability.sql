@@ -3,7 +3,6 @@ CREATE OR ALTER PROCEDURE dbo.sp_GetDoctorAvailability
     @DayOfWeek INT
 AS
 BEGIN
-    SET NOCOUNT ON;
 
     IF @DayOfWeek NOT BETWEEN 1 AND 7
         THROW 50011, 'DayOfWeek debe estar entre 1 (lunes) y 7 (domingo).', 1;
@@ -52,5 +51,5 @@ BEGIN
     FROM ActiveSchedules S
         INNER JOIN NumberSeries N ON S.StartMinute + ((N.N + 1) * @AppointmentDurationMinutes) <= S.EndMinute
     ORDER BY S.StartTime, StartTime
-    OPTION (MAXRECURSION 1000);
+
 END

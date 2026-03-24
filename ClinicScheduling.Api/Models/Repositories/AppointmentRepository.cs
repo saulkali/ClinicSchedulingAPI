@@ -210,7 +210,7 @@ public class AppointmentRepository : IAppointmentRepository
             var created = result.FirstOrDefault()
                 ?? throw new InvalidOperationException("No fue posible crear la cita.");
 
-            return await GetByIdAsync(created.Id) ?? created;
+            return await GetByIdAsync(created.Id) ?? created; // solo valida que si se crea el registro o solo seria retornar
         }
         catch (SqlException ex)
         {

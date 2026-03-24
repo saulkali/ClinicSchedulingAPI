@@ -246,7 +246,7 @@ public class ClinicWebApplicationFactory : WebApplicationFactory<Program>
             DoctorId = doctor.Id,
             DayOfWeek = 1,
             StartTime = new TimeSpan(9, 0, 0),
-            EndTime = new TimeSpan(13, 0, 0),
+            EndTime = new TimeSpan(16, 0, 0),
             IsActive = true
         };
 
@@ -283,11 +283,11 @@ public class ClinicWebApplicationFactory : WebApplicationFactory<Program>
 
                 using var command = connection.CreateCommand();
                 command.CommandText = $@"
-IF DB_ID('{_databaseName}') IS NOT NULL
-BEGIN
-    ALTER DATABASE [{_databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE [{_databaseName}];
-END";
+                IF DB_ID('{_databaseName}') IS NOT NULL
+                BEGIN
+                    ALTER DATABASE [{_databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+                    DROP DATABASE [{_databaseName}];
+                END";
                 command.ExecuteNonQuery();
             }
             catch
