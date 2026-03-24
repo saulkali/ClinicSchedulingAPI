@@ -62,21 +62,33 @@ public class ClinicWebApplicationFactory : WebApplicationFactory<Program>
     private void CreateStoredProcedures(ClinicSchedulingDbContext dbContext)
     {
         var solutionRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../"));
-        var spPath = Path.Combine(
-            solutionRoot,
-            "ClinicScheduling.Api",
-            "Docs",
-            "SqlServer",
-            "SpDb",
-            "sp_CreateAppointment.sql"
-        );
+        var storedProcedurePaths = new[]
+        {
+            Path.Combine(
+                solutionRoot,
+                "ClinicScheduling.Api",
+                "Docs",
+                "SqlServer",
+                "SpDb",
+                "sp_CreateAppointment.sql"),
+            Path.Combine(
+                solutionRoot,
+                "ClinicScheduling.Api",
+                "Docs",
+                "SqlServer",
+                "SpDb",
+                "sp_GetAppointmentsByDoctor.sql")
+        };
 
-        if (!File.Exists(spPath))
-            throw new FileNotFoundException($"No se encontró el archivo del stored procedure en: {spPath}");
+        foreach (var spPath in storedProcedurePaths)
+        {
+            if (!File.Exists(spPath))
+                throw new FileNotFoundException($"No se encontró el archivo del stored procedure en: {spPath}");
 
-        var script = File.ReadAllText(spPath);
+            var script = File.ReadAllText(spPath);
 
-        ExecuteSqlScriptInBatches(dbContext, script);
+            ExecuteSqlScriptInBatches(dbContext, script);
+        }
     }
 
     private static void ExecuteSqlScriptInBatches(ClinicSchedulingDbContext dbContext, string script)

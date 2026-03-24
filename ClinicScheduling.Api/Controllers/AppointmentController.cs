@@ -58,6 +58,18 @@ public class AppointmentController : ControllerBase
     }
 
     /// <summary>
+    /// Obtiene las citas activas de un doctor usando su identificador.
+    /// </summary>
+    /// <param name="doctorId">Identificador único del doctor.</param>
+    /// <returns>Listado de citas médicas del doctor.</returns>
+    [HttpGet("doctor/{doctorId:guid}")]
+    public async Task<IActionResult> GetByDoctorId(Guid doctorId)
+    {
+        var appointments = await _repository.GetByDoctorIdAsync(doctorId);
+        return Ok(_mapper.Map<IEnumerable<AppointmentDtos.Response>>(appointments));
+    }
+
+    /// <summary>
     /// Crea una nueva cita médica con la información enviada en la solicitud.
     /// </summary>
     /// <param name="request">Datos necesarios para registrar la cita.</param>

@@ -46,6 +46,18 @@ public class AppointmentControllerTests
     }
 
     [Test]
+    public async Task GetByDoctorId_ShouldReturnOkWithAppointments_WhenExists()
+    {
+        var response = await _client.GetAsync($"/api/appointment/doctor/{_factory.ExistingDoctorId}");
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+        var payload = await response.Content.ReadFromJsonAsync<List<AppointmentDtos.Response>>();
+        Assert.That(payload, Is.Not.Null);
+        Assert.That(payload, Is.Not.Empty);
+        Assert.That(payload!.Any(x => x.DoctorId == _factory.ExistingDoctorId), Is.True);
+    }
+
+    [Test]
     public async Task Create_ShouldReturnBadRequest_WhenDateRangeIsInvalid()
     {
         var start = new DateTime(2026, 4, 1, 9, 0, 0, DateTimeKind.Utc);
