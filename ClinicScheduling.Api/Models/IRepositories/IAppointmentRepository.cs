@@ -9,7 +9,7 @@ public interface IAppointmentRepository
     Task<AppointmentEntity?> GetByIdAsync(Guid id);
     Task<IEnumerable<AppointmentEntity>> GetByPatientIdAsync(Guid patientId);
     Task<IEnumerable<AppointmentEntity>> GetByDoctorIdAsync(Guid doctorId);
-    Task<IEnumerable<AppointmentDtos.AppointmentAviableDoctorDto>> GetDoctorAvailabilityAsync(Guid doctorId, int dayOfWeek);
+    Task<AppointmentDtos.AppointmentAviableDoctorDto> GetDoctorAvailabilityAsync(Guid doctorId, DateTime date);
     Task<AppointmentEntity> CreateAsync(AppointmentEntity entity);
     Task<AppointmentEntity?> UpdateAsync(AppointmentEntity entity);
     Task<bool> DeleteAsync(Guid id);

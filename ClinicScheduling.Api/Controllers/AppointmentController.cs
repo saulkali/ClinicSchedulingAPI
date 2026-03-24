@@ -72,19 +72,19 @@ public class AppointmentController : ControllerBase
     }
 
     /// <summary>
-    /// Obtiene los bloques de horario disponibles por día de semana para un doctor,
-    /// considerando el tiempo de cita configurado en su especialidad.
+    /// Obtiene los bloques de horario disponibles para un doctor en una fecha específica,
+    /// considerando su horario laboral, la duración de la especialidad y las citas ya ocupadas.
     /// </summary>
     /// <param name="doctorId">Identificador único del doctor.</param>
-    /// <param name="dayOfWeek">Día de semana (1 = lunes ... 7 = domingo).</param>
+    /// <param name="date">Fecha exacta a consultar (yyyy-MM-dd).</param>
     /// <returns>Listado de horarios disponibles para agendar.</returns>
-    [HttpGet("doctor/{doctorId:guid}/availability/{dayOfWeek:int}")]
-    public async Task<IActionResult> GetDoctorAvailability(Guid doctorId, int dayOfWeek)
+    [HttpGet("doctor/{doctorId:guid}/availability")]
+    public async Task<IActionResult> GetDoctorAvailability(Guid doctorId, [FromQuery] DateTime date)
     {
-        if (dayOfWeek is < 1 or > 7)
-            return BadRequest("dayOfWeek debe estar entre 1 (lunes) y 7 (domingo).");
+        if (date == default)
+            return BadRequest("date es requerido y debe tener formato yyyy-MM-dd.");
 
-        var availability = await _repository.GetDoctorAvailabilityAsync(doctorId, dayOfWeek);
+        var availability = await _repository.GetDoctorAvailabilityAsync(doctorId, date.Date);
         return Ok(availability);
     }
 

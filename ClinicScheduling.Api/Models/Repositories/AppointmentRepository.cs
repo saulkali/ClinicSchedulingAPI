@@ -64,10 +64,10 @@ public class AppointmentRepository : IAppointmentRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<AppointmentDtos.AppointmentAviableDoctorDto>> GetDoctorAvailabilityAsync(Guid doctorId, int dayOfWeek)
+    public async Task<AppointmentDtos.AppointmentAviableDoctorDto> GetDoctorAvailabilityAsync(Guid doctorId, DateTime date)
     {
         var doctorIdParameter = new SqlParameter("@DoctorId", SqlDbType.UniqueIdentifier) { Value = doctorId };
-        var dayOfWeekParameter = new SqlParameter("@DayOfWeek", SqlDbType.Int) { Value = dayOfWeek };
+        var dateParameter = new SqlParameter("@Date", SqlDbType.Date) { Value = date.Date };
 
         await using var connection = _dbContext.Database.GetDbConnection();
 
@@ -78,24 +78,30 @@ public class AppointmentRepository : IAppointmentRepository
         command.CommandText = "dbo.sp_GetDoctorAvailability";
         command.CommandType = CommandType.StoredProcedure;
         command.Parameters.Add(doctorIdParameter);
-        command.Parameters.Add(dayOfWeekParameter);
+        command.Parameters.Add(dateParameter);
 
-        var availability = new List<AppointmentDtos.AppointmentAviableDoctorDto>();
+        var result = new AppointmentDtos.AppointmentAviableDoctorDto
+        {
+            DoctorId = doctorId,
+            Date = date.Date,
+            DayOfWeek = date.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)date.DayOfWeek
+        };
 
         await using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            availability.Add(new AppointmentDtos.AppointmentAviableDoctorDto
+            result.DoctorId = reader.GetGuid(reader.GetOrdinal("DoctorId"));
+            result.Date = reader.GetDateTime(reader.GetOrdinal("Date"));
+            result.DayOfWeek = reader.GetInt32(reader.GetOrdinal("DayOfWeek"));
+            result.DurationMinutes = reader.GetInt32(reader.GetOrdinal("DurationMinutes"));
+            result.AvailableSlots.Add(new AppointmentDtos.DoctorAvailableSlotDto
             {
-                DoctorId = reader.GetGuid(reader.GetOrdinal("DoctorId")),
-                DayOfWeek = reader.GetInt32(reader.GetOrdinal("DayOfWeek")),
-                StartTime = reader.GetFieldValue<TimeSpan>(reader.GetOrdinal("StartTime")),
-                EndTime = reader.GetFieldValue<TimeSpan>(reader.GetOrdinal("EndTime")),
-                DurationMinutes = reader.GetInt32(reader.GetOrdinal("DurationMinutes"))
+                StartDateTime = reader.GetDateTime(reader.GetOrdinal("StartDateTime")),
+                EndDateTime = reader.GetDateTime(reader.GetOrdinal("EndDateTime"))
             });
         }
 
-        return availability;
+        return result;
     }
 
     // lo deje este metodo fue el primero en hacer las validaciones a nivel de linq y EF

@@ -1,11 +1,14 @@
 CREATE OR ALTER PROCEDURE dbo.sp_GetDoctorAvailability
     @DoctorId UNIQUEIDENTIFIER,
-    @DayOfWeek INT
+    @Date DATE
 AS
 BEGIN
+    SET NOCOUNT ON;
 
-    IF @DayOfWeek NOT BETWEEN 1 AND 7
-        THROW 50011, 'DayOfWeek debe estar entre 1 (lunes) y 7 (domingo).', 1;
+    IF @Date IS NULL
+        THROW 50011, 'Date es requerido.', 1;
+
+    DECLARE @DayOfWeek INT = ((DATEDIFF(DAY, '19000101', @Date) + 1) % 7) + 1;
 
     DECLARE @AppointmentDurationMinutes INT;
 
@@ -24,7 +27,6 @@ BEGIN
     (
         SELECT
             DS.DoctorId,
-            DS.DayOfWeek,
             DS.StartTime,
             DS.EndTime,
             DATEDIFF(MINUTE, CAST('00:00:00' AS TIME), DS.StartTime) AS StartMinute,
@@ -33,6 +35,18 @@ BEGIN
         WHERE DS.DoctorId = @DoctorId
           AND DS.DayOfWeek = @DayOfWeek
           AND DS.IsActive = 1
+    ),
+    BusyAppointments AS
+    (
+        SELECT
+            A.DoctorId,
+            A.StartDateTime,
+            A.EndDateTime
+        FROM Appointments A
+        WHERE A.DoctorId = @DoctorId
+          AND A.IsActive = 1
+          AND A.Status = 'Scheduled'
+          AND CAST(A.StartDateTime AS DATE) = @Date
     ),
     NumberSeries AS
     (
@@ -43,13 +57,21 @@ BEGIN
         WHERE N < 300
     )
     SELECT
-        S.DoctorId,
-        S.DayOfWeek,
-        CAST(DATEADD(MINUTE, N.N * @AppointmentDurationMinutes, CAST(S.StartTime AS DATETIME2)) AS TIME) AS StartTime,
-        CAST(DATEADD(MINUTE, (N.N + 1) * @AppointmentDurationMinutes, CAST(S.StartTime AS DATETIME2)) AS TIME) AS EndTime,
+        @DoctorId AS DoctorId,
+        CAST(@Date AS DATETIME2) AS [Date],
+        @DayOfWeek AS DayOfWeek,
+        DATEADD(MINUTE, S.StartMinute + (N.N * @AppointmentDurationMinutes), CAST(@Date AS DATETIME2)) AS StartDateTime,
+        DATEADD(MINUTE, S.StartMinute + ((N.N + 1) * @AppointmentDurationMinutes), CAST(@Date AS DATETIME2)) AS EndDateTime,
         @AppointmentDurationMinutes AS DurationMinutes
     FROM ActiveSchedules S
         INNER JOIN NumberSeries N ON S.StartMinute + ((N.N + 1) * @AppointmentDurationMinutes) <= S.EndMinute
-    ORDER BY S.StartTime, StartTime
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM BusyAppointments BA
+        WHERE BA.StartDateTime < DATEADD(MINUTE, S.StartMinute + ((N.N + 1) * @AppointmentDurationMinutes), CAST(@Date AS DATETIME2))
+          AND BA.EndDateTime > DATEADD(MINUTE, S.StartMinute + (N.N * @AppointmentDurationMinutes), CAST(@Date AS DATETIME2))
+    )
+    ORDER BY StartDateTime
 
 END
