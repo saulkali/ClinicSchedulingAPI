@@ -9,7 +9,7 @@ variables:
   vmPath: '/home/netnetwork/clinicscheduling-api'
   imageName: 'clinicscheduling-api'
   containerName: 'clinicscheduling-api'
-  projectFile: 'ClinicScheduling.Api.csproj'
+  projectFile: '**/ClinicScheduling.Api.csproj'
 
 steps:
 - task: UseDotNet@2
@@ -17,7 +17,15 @@ steps:
   inputs:
     packageType: 'sdk'
     version: '9.x'
-    
+
+- script: |
+    echo "Build.SourcesDirectory=$(Build.SourcesDirectory)"
+    echo "Contenido raíz:"
+    ls -la $(Build.SourcesDirectory)
+    echo "Archivos csproj encontrados:"
+    find $(Build.SourcesDirectory) -name "*.csproj"
+  displayName: 'Debug project files'
+
 - task: DotNetCoreCLI@2
   displayName: 'Restore project'
   inputs:
