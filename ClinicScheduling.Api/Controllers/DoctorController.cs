@@ -19,6 +19,10 @@ public class DoctorController : ControllerBase
         _mapper = mapper;
     }
 
+    /// <summary>
+    /// Obtiene la lista de todos los doctores registrados.
+    /// </summary>
+    /// <returns>Listado de doctores.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<DoctorDtos.Response>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
@@ -27,6 +31,11 @@ public class DoctorController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<DoctorDtos.Response>>(doctors));
     }
 
+    /// <summary>
+    /// Obtiene un doctor específico por su identificador.
+    /// </summary>
+    /// <param name="id">Identificador único del doctor.</param>
+    /// <returns>El doctor encontrado o un resultado 404 si no existe.</returns>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(DoctorDtos.Response), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -36,6 +45,11 @@ public class DoctorController : ControllerBase
         return doctor is null ? NotFound() : Ok(_mapper.Map<DoctorDtos.Response>(doctor));
     }
 
+    /// <summary>
+    /// Crea un nuevo registro de doctor.
+    /// </summary>
+    /// <param name="request">Datos del doctor a registrar.</param>
+    /// <returns>El doctor creado.</returns>
     [HttpPost]
     [ProducesResponseType(typeof(DoctorDtos.Response), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -51,6 +65,12 @@ public class DoctorController : ControllerBase
             _mapper.Map<DoctorDtos.Response>(created));
     }
 
+    /// <summary>
+    /// Actualiza los datos de un doctor existente.
+    /// </summary>
+    /// <param name="id">Identificador único del doctor a actualizar.</param>
+    /// <param name="request">Nuevos datos del doctor.</param>
+    /// <returns>El doctor actualizado o un resultado 404 si no existe.</returns>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(DoctorDtos.Response), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -70,6 +90,11 @@ public class DoctorController : ControllerBase
         return updated is null ? NotFound() : Ok(_mapper.Map<DoctorDtos.Response>(updated));
     }
 
+    /// <summary>
+    /// Elimina un doctor por su identificador.
+    /// </summary>
+    /// <param name="id">Identificador único del doctor a eliminar.</param>
+    /// <returns>204 si se elimina correctamente o 404 si no existe.</returns>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

@@ -19,6 +19,10 @@ public class AppointmentController : ControllerBase
         _mapper = mapper;
     }
 
+    /// <summary>
+    /// Obtiene la lista completa de citas registradas en el sistema.
+    /// </summary>
+    /// <returns>Listado de citas médicas.</returns>
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -26,6 +30,11 @@ public class AppointmentController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<AppointmentDtos.Response>>(appointments));
     }
 
+    /// <summary>
+    /// Obtiene el detalle de una cita específica mediante su identificador.
+    /// </summary>
+    /// <param name="id">Identificador único de la cita.</param>
+    /// <returns>La cita encontrada o un resultado 404 si no existe.</returns>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -36,6 +45,11 @@ public class AppointmentController : ControllerBase
         return Ok(_mapper.Map<AppointmentDtos.Response>(appointment));
     }
 
+    /// <summary>
+    /// Crea una nueva cita médica con la información enviada en la solicitud.
+    /// </summary>
+    /// <param name="request">Datos necesarios para registrar la cita.</param>
+    /// <returns>La cita creada con su identificador generado.</returns>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] AppointmentDtos.Create request)
     {
@@ -57,6 +71,12 @@ public class AppointmentController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Actualiza la información de una cita existente.
+    /// </summary>
+    /// <param name="id">Identificador único de la cita a actualizar.</param>
+    /// <param name="request">Nuevos datos de la cita.</param>
+    /// <returns>La cita actualizada o un resultado 404 si no existe.</returns>
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] AppointmentDtos.Update request)
     {
@@ -77,6 +97,11 @@ public class AppointmentController : ControllerBase
         return Ok(_mapper.Map<AppointmentDtos.Response>(updated));
     }
 
+    /// <summary>
+    /// Elimina una cita médica del sistema por su identificador.
+    /// </summary>
+    /// <param name="id">Identificador único de la cita a eliminar.</param>
+    /// <returns>204 si se elimina correctamente o 404 si no existe.</returns>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {

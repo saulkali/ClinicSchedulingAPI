@@ -19,6 +19,10 @@ public class DoctorScheduleController : ControllerBase
         _mapper = mapper;
     }
 
+    /// <summary>
+    /// Obtiene todos los horarios de atención médica registrados.
+    /// </summary>
+    /// <returns>Listado de horarios de doctores.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<DoctorScheduleDtos.Response>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
@@ -27,6 +31,11 @@ public class DoctorScheduleController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<DoctorScheduleDtos.Response>>(schedules));
     }
 
+    /// <summary>
+    /// Obtiene el detalle de un horario de doctor por su identificador.
+    /// </summary>
+    /// <param name="id">Identificador único del horario.</param>
+    /// <returns>El horario encontrado o un resultado 404 si no existe.</returns>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(DoctorScheduleDtos.Response), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -36,6 +45,11 @@ public class DoctorScheduleController : ControllerBase
         return schedule is null ? NotFound() : Ok(_mapper.Map<DoctorScheduleDtos.Response>(schedule));
     }
 
+    /// <summary>
+    /// Crea un nuevo horario de atención para un doctor.
+    /// </summary>
+    /// <param name="request">Datos del horario a registrar.</param>
+    /// <returns>El horario creado.</returns>
     [HttpPost]
     [ProducesResponseType(typeof(DoctorScheduleDtos.Response), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -54,6 +68,12 @@ public class DoctorScheduleController : ControllerBase
             _mapper.Map<DoctorScheduleDtos.Response>(created));
     }
 
+    /// <summary>
+    /// Actualiza la información de un horario de doctor existente.
+    /// </summary>
+    /// <param name="id">Identificador único del horario a actualizar.</param>
+    /// <param name="request">Nuevos datos del horario.</param>
+    /// <returns>El horario actualizado o un resultado 404 si no existe.</returns>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(DoctorScheduleDtos.Response), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -76,6 +96,11 @@ public class DoctorScheduleController : ControllerBase
         return updated is null ? NotFound() : Ok(_mapper.Map<DoctorScheduleDtos.Response>(updated));
     }
 
+    /// <summary>
+    /// Elimina un horario de doctor por su identificador.
+    /// </summary>
+    /// <param name="id">Identificador único del horario a eliminar.</param>
+    /// <returns>204 si se elimina correctamente o 404 si no existe.</returns>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
