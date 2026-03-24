@@ -28,6 +28,14 @@ public class AppointmentRepository : IAppointmentRepository
             .Include(x => x.Patient)
             .FirstOrDefaultAsync(x => x.Id == id);
 
+    public async Task<IEnumerable<AppointmentEntity>> GetByPatientIdAsync(Guid patientId) =>
+        await _dbContext.Appointments
+            .Include(x => x.Doctor)
+            .Include(x => x.Patient)
+            .Where(x => x.PatientId == patientId)
+            .AsNoTracking()
+            .ToListAsync();
+
     public async Task<AppointmentEntity> CreateAsync(AppointmentEntity entity)
     {
         var doctor = await _dbContext.Doctors
