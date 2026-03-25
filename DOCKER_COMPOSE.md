@@ -2,7 +2,7 @@
 
 Este repositorio ahora incluye un archivo `docker-compose.yml` en la raíz para levantar un entorno base de **backend + SQL Server**.
 
-> ⚠️ Nota importante: este compose **no fue probado en este entorno** porque no hay Docker disponible aquí. Aun así, se comparte como plantilla operativa recomendada.
+> ⚠️ Nota importante: este compose **no fue probado se adjunta como ejemplo**
 
 ---
 
@@ -78,11 +78,3 @@ VITE_API_URL=http://backend:8080
 ```
 
 ---
-
-## 6) Ajustes sugeridos para producción
-
-- No usar contraseñas por defecto.
-- Inyectar secretos vía pipeline o secret manager.
-- Publicar puertos solo cuando sea necesario.
-- Agregar monitoreo y rotación de logs.
-
