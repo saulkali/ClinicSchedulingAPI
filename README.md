@@ -1,87 +1,197 @@
-REPOSITORIOS PÚBLICOS
+# ClinicScheduling API
 
-El código fuente del proyecto se encuentra disponible públicamente en GitHub:
+API REST para gestión de agenda clínica (usuarios, médicos, pacientes, horarios y citas), construida en **ASP.NET Core 9** con **Entity Framework Core + SQL Server** y autenticación por **JWT**.
 
-Frontend React:
-https://github.com/saulkali/ClinicSchedulingFrontEnd.git
+> Este repositorio corresponde al backend. El frontend (React) vive en un repositorio separado.
 
-Backend API .NET:
-https://github.com/saulkali/ClinicSchedulingAPI.git
+---
 
+## 1) Objetivo del proyecto
 
-INTEGRACIÓN CONTINUA Y DESPLIEGUE AUTOMÁTICO
+El sistema permite administrar la operación principal de una clínica:
 
-El proyecto cuenta con pipelines configurados en Azure DevOps.  
-Cualquier modificación realizada en los repositorios se refleja automáticamente en el entorno desplegado, lo que permite ahorrar tiempo de despliegue manual.
+- Alta/baja/cambios y consulta de:
+  - Roles
+  - Usuarios
+  - Especialidades
+  - Médicos
+  - Pacientes
+  - Horarios de médico
+  - Citas
+- Consulta de disponibilidad por médico y fecha.
+- Protección de endpoints con autenticación/autorización JWT.
+- Exposición de documentación OpenAPI (Swagger).
 
-Esto incluye:
+---
 
-- Build automático
-- Ejecución de pruebas
-- Construcción de imágenes Docker
-- Despliegue automático en servidor
-  
-- Actualización del entorno en producción
+## 2) Stack tecnológico
 
-Gracias a esta configuración, no es necesario realizar deploy manual después de cada cambio.
+- **.NET 9 (net9.0)**
+- **ASP.NET Core Web API**
+- **Entity Framework Core 9 (SQL Server)**
+- **Stored Procedures en SQL Server** para reglas clave de agenda
+- **JWT Bearer Authentication**
+- **NUnit + Microsoft.AspNetCore.Mvc.Testing** para pruebas de integración
+- **Docker** para empaquetado y despliegue
+- **Azure DevOps Pipeline** para CI/CD
 
+---
 
-NOTA IMPORTANTE
+## 3) Arquitectura (visión rápida)
 
-Se puede consultar una demo funcional desplegada en uno de mis servidores físicos. Las URLs son las siguientes:
+El proyecto sigue una separación por capas orientada a mantenibilidad:
 
-Frontend React.js:
-http://170.80.240.210:4445/
+- `Controllers/`: endpoints HTTP.
+- `Models/Repositories` y `Models/IRepositories`: acceso a datos y reglas de aplicación.
+- `Common/Database`: contexto de EF y entidades.
+- `Common/Dtos`, `Common/MapperProfiles`: contratos de entrada/salida y mapeos.
+- `Common/Security`: servicios de autenticación/JWT.
 
-Backend API Swagger:
-http://170.80.240.210:4444/swagger/index.html
+Si quieres detalle operacional de base de datos, revisa:
 
+- `ClinicScheduling.Api/Docs/Crear_base_de_datos.md`
 
-CÓMO HACER DEPLOY
+---
 
-Dentro del proyecto encontrarás un archivo Dockerfile, el cual permite crear una imagen y desplegar la aplicación dentro de un contenedor Docker.
+## 4) Requisitos para desarrollo local
 
-Comando para construir la imagen:
+- .NET SDK 9.x
+- SQL Server (local, remoto o en Docker)
+- (Opcional) Docker para ejecutar la API en contenedor
 
+---
+
+## 5) Ejecución local (sin Docker)
+
+1. Restaurar dependencias:
+
+```bash
+dotnet restore
+```
+
+2. Configurar `ConnectionStrings:ClinicSchedulingDb` y `Jwt` en `ClinicScheduling.Api/appsettings.json` (o con variables de entorno).
+
+3. Ejecutar API:
+
+```bash
+dotnet run --project ClinicScheduling.Api
+```
+
+4. Abrir Swagger:
+
+- `http://localhost:<puerto>/swagger`
+
+> Nota: en este proyecto Swagger está habilitado también fuera de Development.
+
+---
+
+## 6) Ejecución con Docker
+
+Desde la carpeta `ClinicScheduling.Api/`:
+
+1. Construir imagen:
+
+```bash
 docker build -t clinicscheduling-api .
+```
 
-Comando para ejecutar el contenedor:
+2. Ejecutar contenedor:
 
-docker run -d -p 4444:8080 --name clinicscheduling-api clinicscheduling-api
+```bash
+docker run -d \
+  --name clinicscheduling-api \
+  -p 4444:8080 \
+  -e ASPNETCORE_ENVIRONMENT=Production \
+  -e ASPNETCORE_URLS=http://+:8080 \
+  clinicscheduling-api
+```
 
-Si también se desea desplegar el frontend, se debe construir y ejecutar su contenedor correspondiente de forma similar, exponiendo el puerto configurado para la aplicación frontend.
+Swagger quedará disponible en:
 
+- `http://localhost:4444/swagger/index.html`
 
-CONFIGURACIÓN DE LA CONNECTION STRING
+---
 
-La conexión a SQL Server puede configurarse de dos formas:
+## 7) Configuración de conexión a base de datos
 
-1. Mediante variables de entorno
-2. Directamente en el archivo appsettings.json
+Puedes configurar la conexión a SQL Server de dos formas:
 
-Ejemplo de configuración en appsettings.json:
+1. **appsettings.json**
+2. **Variables de entorno** (recomendado para CI/CD y producción)
 
+Ejemplo:
+
+```json
 "ConnectionStrings": {
-"ClinicSchedulingDb": "Server=localhost,1433;Database=ClinicScheduling;User Id=sa;Password=Developer123;TrustServerCertificate=True;Encrypt=False"
+  "ClinicSchedulingDb": "Server=localhost,1433;Database=ClinicScheduling;User Id=sa;Password=<password>;TrustServerCertificate=True;Encrypt=False"
 }
+```
 
-Nota:
-Si la API se ejecuta dentro de Docker y SQL Server se encuentra en otro contenedor, normalmente no debe usarse localhost, sino el nombre del contenedor o del servicio dentro de la red Docker. Por ejemplo:
+### Recomendaciones importantes
 
-"ConnectionStrings": {
-"ClinicSchedulingDb": "Server=sqlserver,1433;Database=ClinicScheduling;User Id=sa;Password=Developer123;TrustServerCertificate=True;Encrypt=False"
-}
+- En Docker, evita `localhost` cuando SQL Server está en otro contenedor. Usa el nombre del servicio/host de red (ej. `sqlserver,1433`).
+- No hardcodear credenciales de producción en repositorio.
+- Usar secretos del pipeline/entorno (Azure DevOps variable groups, secretos de host, etc.).
+
+---
+
+## 8) CI/CD (Azure DevOps)
+
+El pipeline (`azure-pipelines.yml`) está configurado para rama `main` y realiza:
+
+1. Selección de SDK .NET 9.
+2. Restore y build del proyecto.
+3. Copia de código por SSH al servidor objetivo.
+4. Build de imagen Docker en el servidor.
+5. Reemplazo controlado del contenedor (`stop/rm/run`).
+
+Esto permite despliegue continuo sin intervención manual por cada cambio.
+
+---
+
+## 9) Base de datos y migraciones
+
+Consulta guía detallada en:
+
+- `ClinicScheduling.Api/Docs/Crear_base_de_datos.md`
+
+Ahí se documenta:
+
+- creación por migraciones EF,
+- ejecución de stored procedures,
+- restauración desde backup `.bak`,
+- y diagrama de modelo.
+
+---
+
+## 10) Pruebas
+
+El repositorio incluye pruebas de integración en `ClinicScheduling.Api.Tests`.
+
+Guía de ejecución:
+
+- `ClinicScheduling.Api.Tests/Como_ejecutar_pruebas.md`
+
+---
+
+## 11) Repositorios relacionados
+
+- Frontend (React):
+  - https://github.com/saulkali/ClinicSchedulingFrontEnd.git
+- Backend (este repositorio):
+  - https://github.com/saulkali/ClinicSchedulingAPI.git
+
+---
 
 
-DOCUMENTACIÓN
+## 12) Docker Compose
 
-La documentación relacionada con la base de datos y otros archivos de apoyo se encuentra dentro de la carpeta:
+Se agregó una guía para levantar el stack base con Compose:
 
-Docs
+- `docker-compose.yml`
+- `DOCKER_COMPOSE.md`
 
+> Incluye backend + SQL Server en este repo. El frontend se documenta como integración externa.
 
-PRUEBAS
+---
 
-Para la ejecución de pruebas unitarias e integración, consultar el archivo ubicado dentro del proyecto de pruebas:
-
-ClinicScheduling.Api.Tests/Como_ejecutar_pruebas.md

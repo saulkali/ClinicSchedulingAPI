@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: clinicscheduling-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      SA_PASSWORD: ${SA_PASSWORD:-Developer123!ChangeMe}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${SA_PASSWORD}\" -C -Q \"SELECT 1\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - clinicscheduling-network
+
+  backend:
+    build:
+      context: ./ClinicScheduling.Api
+      dockerfile: Dockerfile
+    container_name: clinicscheduling-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__ClinicSchedulingDb: Server=sqlserver,1433;Database=ClinicScheduling;User Id=sa;Password=${SA_PASSWORD:-Developer123!ChangeMe};TrustServerCertificate=True;Encrypt=False
+      Jwt__Key: ${JWT_KEY:-change_this_super_long_jwt_key_in_env}
+      Jwt__Issuer: ClinicScheduling.Api
+      Jwt__Audience: ClinicScheduling.Client
+      Jwt__ExpireMinutes: 120
+    ports:
+      - "4444:8080"
+    restart: unless-stopped
+    networks:
+      - clinicscheduling-network
+
+volumes:
+  sqlserver_data:
+
+networks:
+  clinicscheduling-network:
+    driver: bridge

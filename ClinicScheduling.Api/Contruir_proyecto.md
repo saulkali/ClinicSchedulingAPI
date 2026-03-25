@@ -1,110 +1,124 @@
-BASE DE DATOS Y STORED PROCEDURES
+# Construcción y despliegue del proyecto (Backend API)
 
-Dentro de la carpeta SqlServer se encuentran los Stored Procedures utilizados por el sistema.
-Actualmente son tres:
+> Este documento describe cómo compilar, empaquetar y desplegar **ClinicScheduling API** en ambientes locales y servidor.
 
-1. sp_CreateAppointment.sql
-   Este procedimiento se encarga de crear citas médicas e incluye las siguientes reglas de negocio:
+---
 
-- Evita citas duplicadas
-- Impide citas simultáneas para el mismo doctor
-- Valida que la cita esté dentro del horario laboral del doctor
-- Considera la duración definida por la especialidad
-- Impide crear citas fuera del rango permitido
+## 1) Requisitos previos
 
+- .NET SDK 9.x
+- Docker (para despliegue containerizado)
+- Acceso a una instancia SQL Server
+- Variables/secretos de entorno para credenciales de BD y JWT
 
-2. sp_GetAppointmentsByDoctor.sql
-   Este procedimiento obtiene las citas agendadas de un doctor.
+---
 
-- Filtra por DoctorId
-- Retorna únicamente citas activas
-- Permite visualizar el calendario del doctor
+## 2) Build local de la solución
 
+Desde la raíz del repositorio:
 
-3. sp_GetDoctorAvailability.sql
-   Este procedimiento obtiene la disponibilidad de horarios por día de un doctor.
+```bash
+dotnet restore
+dotnet build -c Release
+```
 
-Funcionalidad:
+Para ejecutar únicamente la API:
 
-- Recibe DoctorId y Date
-- Calcula la duración según la especialidad
-- Evalúa el horario laboral del doctor
-- Excluye citas ya ocupadas
-- Retorna únicamente los espacios disponibles
+```bash
+dotnet run --project ClinicScheduling.Api
+```
 
+---
 
-DIAGRAMA DE BASE DE DATOS
+## 3) Build de imagen Docker
 
-Se incluye un archivo llamado:
+El `Dockerfile` está dentro de `ClinicScheduling.Api/` y usa multi-stage build:
 
-database diagram.drawio
+1. `mcr.microsoft.com/dotnet/sdk:9.0` para restaurar/publicar.
+2. `mcr.microsoft.com/dotnet/aspnet:9.0` para runtime.
 
-Aunque existen herramientas que generan diagramas automáticamente a partir de la base de datos,
-se decidió incluir este archivo manualmente ya que el diseño del sistema comenzó desde la
-modelación de la base de datos.
+Comandos:
 
-El archivo puede abrirse con:
+```bash
+cd ClinicScheduling.Api
+docker build -t clinicscheduling-api:latest .
+```
 
-https://app.diagrams.net/
-(o software draw.io)
+---
 
-Este diagrama permite visualizar:
+## 4) Run del contenedor
 
-- Relaciones entre tablas
-- Llaves primarias y foráneas
-- Estructura general del sistema
-- Flujo de entidades principales
+```bash
+docker run -d \
+  --name clinicscheduling-api \
+  --restart unless-stopped \
+  -p 4444:8080 \
+  -e ASPNETCORE_ENVIRONMENT=Production \
+  -e ASPNETCORE_URLS=http://+:8080 \
+  -e ConnectionStrings__ClinicSchedulingDb="Server=<host>,1433;Database=ClinicScheduling;User Id=sa;Password=<password>;TrustServerCertificate=True;Encrypt=False" \
+  -e Jwt__Key="<jwt_key_segura>" \
+  -e Jwt__Issuer="ClinicScheduling.Api" \
+  -e Jwt__Audience="ClinicScheduling.Client" \
+  -e Jwt__ExpireMinutes="120" \
+  clinicscheduling-api:latest
+```
 
+Swagger:
 
-CREACIÓN DE LA BASE DE DATOS
+- `http://localhost:4444/swagger/index.html`
 
-Existen dos formas de crear la base de datos:
+---
 
+## 5) Estrategia recomendada de configuración
 
-OPCIÓN 1 — Usando migraciones de Entity Framework
+Para evitar exponer datos sensibles:
 
-Crear la migración:
+- **No** dejar secretos reales en `appsettings.json`.
+- Inyectar configuración por variables de entorno o gestor de secretos.
+- Separar valores por ambiente (`Development`, `QA`, `Production`).
 
-dotnet ef migrations add InitialCreate
+Orden de precedencia (ASP.NET Core):
 
-Aplicar la migración:
+1. Variables de entorno
+2. appsettings.{Environment}.json
+3. appsettings.json
 
-dotnet ef database update
+---
 
-Esto creará:
+## 6) CI/CD con Azure DevOps
 
-- Tablas
-- Relaciones
-- Índices
-- Constraints
+El pipeline `azure-pipelines.yml` realiza un flujo de despliegue continuo:
 
-Después se deben ejecutar manualmente los Stored Procedures ubicados en la carpeta SqlServer.
+1. Trigger en `main`.
+2. `UseDotNet@2` para SDK 9.
+3. Restore/build con `DotNetCoreCLI@2`.
+4. Copia de fuentes vía `CopyFilesOverSSH@0`.
+5. Construcción y despliegue del contenedor por SSH (`docker build`, `docker stop/rm`, `docker run`).
 
+### Buenas prácticas para este pipeline
 
-OPCIÓN 2 — Restaurar desde Backup (.bak)
+- Versionar imágenes con tag semántico además de `latest`.
+- Configurar health checks del contenedor/API.
+- Guardar logs del paso SSH para troubleshooting.
+- Usar secretos protegidos en Azure DevOps Service Connection y variables seguras.
 
-Se incluye un respaldo completo de la base de datos dentro de:
+---
 
-SqlServer/Backup/ClinicScheduling.bak
+## 7) Checklist de despliegue a producción
 
+Antes de desplegar:
 
-Restaurar en SQL Server (Windows)
+- [ ] Build en Release exitoso.
+- [ ] Pruebas de integración ejecutadas.
+- [ ] Connection string de producción validada.
+- [ ] JWT key robusta (alta entropía).
+- [ ] Stored Procedures presentes en base de datos.
+- [ ] Backup reciente de base de datos.
 
-RESTORE DATABASE ClinicScheduling
-FROM DISK = 'C:\Ruta\ClinicScheduling.bak'
-WITH REPLACE;
+Después de desplegar:
 
+- [ ] Verificar contenedor en estado `Up` (`docker ps`).
+- [ ] Validar endpoint `/swagger/index.html`.
+- [ ] Probar login y al menos 1 flujo de citas.
+- [ ] Revisar logs de aplicación y sistema.
 
-Restaurar en SQL Server Docker
-
-Copiar el backup al contenedor:
-
-docker cp ClinicScheduling.bak sqlserver:/var/opt/mssql/data/ClinicScheduling.bak
-
-Restaurar la base:
-
-docker exec -it sqlserver /opt/mssql-tools18/bin/sqlcmd \
--S localhost -U sa -P "Developer123" -C \
--Q "RESTORE DATABASE ClinicScheduling
-FROM DISK = '/var/opt/mssql/data/ClinicScheduling.bak'
-WITH REPLACE"
