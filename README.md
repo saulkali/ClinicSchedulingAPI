@@ -1,110 +1,87 @@
-BASE DE DATOS Y STORED PROCEDURES
+REPOSITORIOS PÚBLICOS
 
-Dentro de la carpeta SqlServer se encuentran los Stored Procedures utilizados por el sistema.
-Actualmente son tres:
+El código fuente del proyecto se encuentra disponible públicamente en GitHub:
 
-1. sp_CreateAppointment.sql
-   Este procedimiento se encarga de crear citas médicas e incluye las siguientes reglas de negocio:
+Frontend React:
+https://github.com/saulkali/ClinicSchedulingFrontEnd.git
 
-- Evita citas duplicadas
-- Impide citas simultáneas para el mismo doctor
-- Valida que la cita esté dentro del horario laboral del doctor
-- Considera la duración definida por la especialidad
-- Impide crear citas fuera del rango permitido
+Backend API .NET:
+https://github.com/saulkali/ClinicSchedulingAPI.git
 
 
-2. sp_GetAppointmentsByDoctor.sql
-   Este procedimiento obtiene las citas agendadas de un doctor.
+INTEGRACIÓN CONTINUA Y DESPLIEGUE AUTOMÁTICO
 
-- Filtra por DoctorId
-- Retorna únicamente citas activas
-- Permite visualizar el calendario del doctor
+El proyecto cuenta con pipelines configurados en Azure DevOps.  
+Cualquier modificación realizada en los repositorios se refleja automáticamente en el entorno desplegado, lo que permite ahorrar tiempo de despliegue manual.
 
+Esto incluye:
 
-3. sp_GetDoctorAvailability.sql
-   Este procedimiento obtiene la disponibilidad de horarios por día de un doctor.
+- Build automático
+- Ejecución de pruebas
+- Construcción de imágenes Docker
+- Despliegue automático en servidor
+  
+- Actualización del entorno en producción
 
-Funcionalidad:
-
-- Recibe DoctorId y Date
-- Calcula la duración según la especialidad
-- Evalúa el horario laboral del doctor
-- Excluye citas ya ocupadas
-- Retorna únicamente los espacios disponibles
+Gracias a esta configuración, no es necesario realizar deploy manual después de cada cambio.
 
 
-DIAGRAMA DE BASE DE DATOS
+NOTA IMPORTANTE
 
-Se incluye un archivo llamado:
+Se puede consultar una demo funcional desplegada en uno de mis servidores físicos. Las URLs son las siguientes:
 
-database diagram.drawio
+Frontend React.js:
+http://170.80.240.210:4445/
 
-Aunque existen herramientas que generan diagramas automáticamente a partir de la base de datos,
-se decidió incluir este archivo manualmente ya que el diseño del sistema comenzó desde la
-modelación de la base de datos.
-
-El archivo puede abrirse con:
-
-https://app.diagrams.net/
-(o software draw.io)
-
-Este diagrama permite visualizar:
-
-- Relaciones entre tablas
-- Llaves primarias y foráneas
-- Estructura general del sistema
-- Flujo de entidades principales
+Backend API Swagger:
+http://170.80.240.210:4444/swagger/index.html
 
 
-CREACIÓN DE LA BASE DE DATOS
+CÓMO HACER DEPLOY
 
-Existen dos formas de crear la base de datos:
+Dentro del proyecto encontrarás un archivo Dockerfile, el cual permite crear una imagen y desplegar la aplicación dentro de un contenedor Docker.
 
+Comando para construir la imagen:
 
-OPCIÓN 1 — Usando migraciones de Entity Framework
+docker build -t clinicscheduling-api .
 
-Crear la migración:
+Comando para ejecutar el contenedor:
 
-dotnet ef migrations add InitialCreate
+docker run -d -p 4444:8080 --name clinicscheduling-api clinicscheduling-api
 
-Aplicar la migración:
-
-dotnet ef database update
-
-Esto creará:
-
-- Tablas
-- Relaciones
-- Índices
-- Constraints
-
-Después se deben ejecutar manualmente los Stored Procedures ubicados en la carpeta SqlServer.
+Si también se desea desplegar el frontend, se debe construir y ejecutar su contenedor correspondiente de forma similar, exponiendo el puerto configurado para la aplicación frontend.
 
 
-OPCIÓN 2 — Restaurar desde Backup (.bak)
+CONFIGURACIÓN DE LA CONNECTION STRING
 
-Se incluye un respaldo completo de la base de datos dentro de:
+La conexión a SQL Server puede configurarse de dos formas:
 
-SqlServer/Backup/ClinicScheduling.bak
+1. Mediante variables de entorno
+2. Directamente en el archivo appsettings.json
+
+Ejemplo de configuración en appsettings.json:
+
+"ConnectionStrings": {
+"ClinicSchedulingDb": "Server=localhost,1433;Database=ClinicScheduling;User Id=sa;Password=Developer123;TrustServerCertificate=True;Encrypt=False"
+}
+
+Nota:
+Si la API se ejecuta dentro de Docker y SQL Server se encuentra en otro contenedor, normalmente no debe usarse localhost, sino el nombre del contenedor o del servicio dentro de la red Docker. Por ejemplo:
+
+"ConnectionStrings": {
+"ClinicSchedulingDb": "Server=sqlserver,1433;Database=ClinicScheduling;User Id=sa;Password=Developer123;TrustServerCertificate=True;Encrypt=False"
+}
 
 
-Restaurar en SQL Server (Windows)
+DOCUMENTACIÓN
 
-RESTORE DATABASE ClinicScheduling
-FROM DISK = 'C:\Ruta\ClinicScheduling.bak'
-WITH REPLACE;
+La documentación relacionada con la base de datos y otros archivos de apoyo se encuentra dentro de la carpeta:
+
+Docs
 
 
-Restaurar en SQL Server Docker
+PRUEBAS
 
-Copiar el backup al contenedor:
+Para la ejecución de pruebas unitarias e integración, consultar el archivo ubicado dentro del proyecto de pruebas:
 
-docker cp ClinicScheduling.bak sqlserver:/var/opt/mssql/data/ClinicScheduling.bak
-
-Restaurar la base:
-
-docker exec -it sqlserver /opt/mssql-tools18/bin/sqlcmd \
--S localhost -U sa -P "Developer123" -C \
--Q "RESTORE DATABASE ClinicScheduling
-FROM DISK = '/var/opt/mssql/data/ClinicScheduling.bak'
-WITH REPLACE"
+ClinicScheduling.Api.Tests/Como_ejecutar_pruebas.md
