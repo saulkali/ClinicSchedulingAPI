@@ -33,6 +33,29 @@ Funcionalidad:
 - Retorna únicamente los espacios disponibles
 
 
+DIAGRAMA DE BASE DE DATOS
+
+Se incluye un archivo llamado:
+
+database diagram.drawio
+
+Aunque existen herramientas que generan diagramas automáticamente a partir de la base de datos,
+se decidió incluir este archivo manualmente ya que el diseño del sistema comenzó desde la
+modelación de la base de datos.
+
+El archivo puede abrirse con:
+
+https://app.diagrams.net/
+(o software draw.io)
+
+Este diagrama permite visualizar:
+
+- Relaciones entre tablas
+- Llaves primarias y foráneas
+- Estructura general del sistema
+- Flujo de entidades principales
+
+
 CREACIÓN DE LA BASE DE DATOS
 
 Existen dos formas de crear la base de datos:
