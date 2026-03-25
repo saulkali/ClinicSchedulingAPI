@@ -1,82 +1,127 @@
-CONSIDERACIONES PARA LA MIGRACIÓN DE DELPHI A C# (ENFOCADO EN BACKEND)
+# Consideraciones para migración de Delphi a C# (enfoque backend)
 
-Al abordar la migración de un sistema legacy desarrollado en Delphi hacia una arquitectura moderna basada en C#,
-es importante definir primero la estrategia de transición. Dentro de este proyecto se incluye únicamente la parte
-orientada al backend; la capa frontend se encuentra contemplada dentro del proyecto correspondiente.
+Este documento resume una estrategia práctica para migrar un sistema legacy en Delphi hacia una API moderna en C# minimizando riesgo operativo.
 
-El primer punto clave al iniciar una migración es responder la siguiente pregunta:
+---
 
-¿Se reutilizará la base de datos existente?
+## 1) Estrategia de migración recomendada
 
-Esta decisión es crítica, ya que un sistema sólido comienza con un buen diseño de base de datos. Dependiendo de la
-respuesta, existen dos enfoques principales:
+Antes de escribir código nuevo, define explícitamente:
 
-1. Reutilizar la base de datos actual
-2. Rediseñar la base de datos desde cero
+1. **Alcance funcional por fase** (qué módulos migrar primero).
+2. **Estrategia de coexistencia** (legacy + nuevo backend en paralelo o big-bang).
+3. **Criterio de salida por fase** (pruebas, métricas y aceptación de negocio).
 
-En caso de reutilizar la base de datos, se recomienda comenzar analizando su estructura actual, identificando:
+En la mayoría de casos críticos conviene una migración **progresiva** con validación por etapas.
 
-- Tablas existentes
-- Relaciones
-- Constraints
-- Reglas de negocio implícitas
-- Dependencias del sistema legacy
+---
 
-Adicionalmente, es importante considerar la lectura y comprensión del código existente en Object Pascal (lenguaje
-utilizado por Delphi). Esto permite:
+## 2) Decisión crítica: base de datos actual vs rediseño
 
-- Entender la lógica actual del sistema
-- Identificar reglas de negocio no documentadas
-- Detectar validaciones implementadas en la capa de aplicación
-- Comprender dependencias entre módulos
-- Reducir riesgos durante la migración
+### Opción A: reutilizar BD existente
 
-Es altamente recomendable trabajar en colaboración con un desarrollador con experiencia en Delphi que conozca el
-sistema actual. Esta colaboración permite:
+Ventajas:
 
-- Entender reglas de negocio no documentadas
-- Identificar lógica embebida en la capa Delphi
-- Reducir riesgos durante la migración
-- Garantizar continuidad funcional
+- Menor impacto inicial,
+- continuidad de operación,
+- facilita transición incremental.
 
-Una vez definidas o rediseñadas las tablas y modeladas correctamente las reglas de negocio, se puede comenzar el
-desarrollo del backend en C#. En esta etapa se recomienda:
+Riesgos:
 
-- Implementar una arquitectura basada en Controllers + Repositories
-- Separar responsabilidades (Clean Architecture / capas)
-- Modelar entidades y DTOs
-- Implementar validaciones de negocio
-- Integrar Stored Procedures cuando sea necesario
+- arrastrar deuda técnica del modelo legacy,
+- reglas implícitas difíciles de detectar.
 
-Para garantizar estabilidad durante la migración, se recomienda incorporar pruebas de integración que validen el
-flujo completo del sistema. Estas pruebas permiten asegurar que:
+### Opción B: rediseñar BD
 
-- La API responde correctamente
-- Las reglas de negocio se respetan
-- La integración con base de datos funciona
-- No se rompa funcionalidad existente
+Ventajas:
 
-Además, se recomienda utilizar Docker para estandarizar los entornos de desarrollo y despliegue, permitiendo:
+- modelo más limpio y mantenible,
+- mejor alineación con arquitectura actual.
 
-- Replicar ambientes fácilmente
-- Evitar conflictos de configuración
-- Simplificar pruebas locales
-- Facilitar despliegues en servidores
+Riesgos:
 
-Para la automatización de despliegues se sugiere integrar pipelines de CI/CD utilizando herramientas como:
+- mayor costo inicial,
+- migración de datos más compleja.
 
-- Azure DevOps
-- Jenkins
-- GitHub Actions (opcional)
+---
 
-Esto permite:
+## 3) Descubrimiento funcional del legado
 
-- Compilar automáticamente el proyecto
-- Ejecutar pruebas
-- Construir imágenes Docker
-- Desplegar en entornos de staging o producción
-- Reducir tiempos de despliegue
-- Minimizar errores manuales
+Para reducir errores de migración:
 
-Siguiendo este enfoque, la migración de Delphi a C# puede realizarse de manera progresiva, controlada y con bajo
-riesgo, manteniendo la continuidad del negocio y mejorando la mantenibilidad del sistema a largo plazo.
+- auditar tablas, relaciones, constraints e índices,
+- identificar lógica oculta en formularios/eventos Delphi,
+- mapear validaciones de negocio no documentadas,
+- documentar procesos con expertos funcionales.
+
+Es altamente recomendable trabajar con al menos una persona con experiencia en Delphi y contexto del negocio.
+
+---
+
+## 4) Diseño de backend en C#
+
+En este proyecto se sugiere:
+
+- Controllers para superficie HTTP,
+- repositorios para acceso a datos,
+- DTOs para contratos estables,
+- reglas de negocio encapsuladas,
+- stored procedures para validaciones transaccionales de agenda.
+
+Principios sugeridos:
+
+- separación de responsabilidades,
+- contratos claros entre capas,
+- trazabilidad de cambios en reglas clínicas,
+- manejo consistente de errores HTTP.
+
+---
+
+## 5) Datos y compatibilidad
+
+Si hay que mover datos históricos:
+
+- diseñar scripts ETL reproducibles,
+- definir equivalencias de catálogos/códigos,
+- validar calidad de datos antes y después,
+- ejecutar pruebas de reconciliación (conteos, totales, muestras).
+
+También conviene definir un plan de rollback por cada despliegue relevante.
+
+---
+
+## 6) Pruebas para proteger la migración
+
+Mínimo recomendado:
+
+- pruebas de integración de endpoints críticos,
+- pruebas de reglas de negocio (horarios, duplicados, disponibilidad),
+- pruebas de regresión funcional por cada iteración,
+- smoke tests post-deploy.
+
+La cobertura no reemplaza revisión funcional: ambas deben convivir.
+
+---
+
+## 7) DevOps y operación
+
+Para estabilizar la transición:
+
+- containerizar API y componentes de soporte,
+- estandarizar ambientes (Dev/QA/Prod),
+- automatizar build/test/deploy en CI/CD,
+- centralizar logs y métricas básicas,
+- definir alertas de disponibilidad y errores.
+
+---
+
+## 8) Plan de adopción por fases (ejemplo)
+
+1. **Fase 0:** inventario funcional + modelo de datos + riesgos.
+2. **Fase 1:** autenticación/usuarios/roles.
+3. **Fase 2:** catálogo clínico (médicos, pacientes, especialidades).
+4. **Fase 3:** agenda y citas (reglas complejas).
+5. **Fase 4:** endurecimiento operativo y optimización.
+
+Cada fase debe cerrar con evidencias técnicas y validación de negocio.
+

@@ -1,110 +1,164 @@
-BASE DE DATOS Y STORED PROCEDURES
+# Guía de base de datos (SQL Server)
 
-Dentro de la carpeta SqlServer se encuentran los Stored Procedures utilizados por el sistema.
-Actualmente son tres:
+Este documento explica cómo preparar la base de datos de **ClinicScheduling API**, incluyendo migraciones, stored procedures y restauración desde backup.
 
-1. sp_CreateAppointment.sql
-   Este procedimiento se encarga de crear citas médicas e incluye las siguientes reglas de negocio:
+---
 
-- Evita citas duplicadas
-- Impide citas simultáneas para el mismo doctor
-- Valida que la cita esté dentro del horario laboral del doctor
-- Considera la duración definida por la especialidad
-- Impide crear citas fuera del rango permitido
+## 1) Resumen funcional de la capa de datos
 
+La solución combina dos enfoques:
 
-2. sp_GetAppointmentsByDoctor.sql
-   Este procedimiento obtiene las citas agendadas de un doctor.
+1. **Entity Framework Core** para estructura base (tablas, relaciones, constraints).
+2. **Stored Procedures** para lógica transaccional y de disponibilidad de citas.
 
-- Filtra por DoctorId
-- Retorna únicamente citas activas
-- Permite visualizar el calendario del doctor
+Esto permite mantener una API clara en C# y reglas críticas de agenda cerca de SQL Server.
 
+---
 
-3. sp_GetDoctorAvailability.sql
-   Este procedimiento obtiene la disponibilidad de horarios por día de un doctor.
+## 2) Stored Procedures incluidos
 
-Funcionalidad:
+Ubicación:
 
-- Recibe DoctorId y Date
-- Calcula la duración según la especialidad
-- Evalúa el horario laboral del doctor
-- Excluye citas ya ocupadas
-- Retorna únicamente los espacios disponibles
+- `ClinicScheduling.Api/Docs/SqlServer/SpDb/`
 
+### 2.1 `sp_CreateAppointment.sql`
 
-DIAGRAMA DE BASE DE DATOS
+Responsable de crear citas aplicando reglas de negocio, entre ellas:
 
-Se incluye un archivo llamado:
+- evitar citas duplicadas,
+- impedir traslapes para el mismo médico,
+- validar que la cita esté dentro del horario configurado,
+- respetar duración de la especialidad,
+- rechazar datos fuera de rango.
 
-database diagram.drawio
+### 2.2 `sp_GetAppointmentsByDoctor.sql`
 
-Aunque existen herramientas que generan diagramas automáticamente a partir de la base de datos,
-se decidió incluir este archivo manualmente ya que el diseño del sistema comenzó desde la
-modelación de la base de datos.
+Consulta calendario de citas por médico:
 
-El archivo puede abrirse con:
+- filtra por `DoctorId`,
+- devuelve citas activas,
+- facilita la vista de agenda del profesional.
 
-https://app.diagrams.net/
-(o software draw.io)
+### 2.3 `sp_GetDoctorAvailability.sql`
 
-Este diagrama permite visualizar:
+Calcula slots disponibles para una fecha:
 
-- Relaciones entre tablas
-- Llaves primarias y foráneas
-- Estructura general del sistema
-- Flujo de entidades principales
+- recibe `DoctorId` y fecha,
+- considera duración por especialidad,
+- cruza horario laboral y citas existentes,
+- retorna bloques realmente disponibles.
 
+---
 
-CREACIÓN DE LA BASE DE DATOS
+## 3) Opción A: crear BD con migraciones EF Core
 
-Existen dos formas de crear la base de datos:
+### 3.1 Instalar herramienta EF (si aplica)
 
+```bash
+dotnet tool install --global dotnet-ef
+```
 
-OPCIÓN 1 — Usando migraciones de Entity Framework
+### 3.2 Crear migración inicial (si aún no existe)
 
-Crear la migración:
+```bash
+dotnet ef migrations add InitialCreate --project ClinicScheduling.Api
+```
 
-dotnet ef migrations add InitialCreate
+### 3.3 Aplicar migraciones
 
-Aplicar la migración:
+```bash
+dotnet ef database update --project ClinicScheduling.Api
+```
 
-dotnet ef database update
+Al finalizar tendrás:
 
-Esto creará:
+- tablas,
+- relaciones,
+- índices,
+- constraints.
 
-- Tablas
-- Relaciones
-- Índices
-- Constraints
+### 3.4 Ejecutar Stored Procedures
 
-Después se deben ejecutar manualmente los Stored Procedures ubicados en la carpeta SqlServer.
+Después de migrar, ejecuta manualmente los scripts de `SpDb` en SQL Server (SSMS, Azure Data Studio o `sqlcmd`).
 
+Ejemplo con `sqlcmd`:
 
-OPCIÓN 2 — Restaurar desde Backup (.bak)
+```bash
+sqlcmd -S <server>,1433 -U sa -P "<password>" -d ClinicScheduling -i sp_CreateAppointment.sql -C
+sqlcmd -S <server>,1433 -U sa -P "<password>" -d ClinicScheduling -i sp_GetAppointmentsByDoctor.sql -C
+sqlcmd -S <server>,1433 -U sa -P "<password>" -d ClinicScheduling -i sp_GetDoctorAvailability.sql -C
+```
 
-Se incluye un respaldo completo de la base de datos dentro de:
+---
 
-SqlServer/Backup/ClinicScheduling.bak
+## 4) Opción B: restaurar base desde backup (.bak)
 
+Archivo de respaldo:
 
-Restaurar en SQL Server (Windows)
+- `ClinicScheduling.Api/Docs/SqlServer/BackupDb/ClinicScheduling.bak`
 
+> Verifica ruta exacta en tu entorno antes de ejecutar restauración.
+
+### 4.1 Restauración en SQL Server (host/Windows)
+
+```sql
 RESTORE DATABASE ClinicScheduling
 FROM DISK = 'C:\Ruta\ClinicScheduling.bak'
 WITH REPLACE;
+```
 
+### 4.2 Restauración en SQL Server Docker
 
-Restaurar en SQL Server Docker
+1. Copiar backup al contenedor:
 
-Copiar el backup al contenedor:
-
+```bash
 docker cp ClinicScheduling.bak sqlserver:/var/opt/mssql/data/ClinicScheduling.bak
+```
 
-Restaurar la base:
+2. Ejecutar restore:
 
+```bash
 docker exec -it sqlserver /opt/mssql-tools18/bin/sqlcmd \
--S localhost -U sa -P "Developer123" -C \
--Q "RESTORE DATABASE ClinicScheduling
-FROM DISK = '/var/opt/mssql/data/ClinicScheduling.bak'
-WITH REPLACE"
+  -S localhost -U sa -P "<password>" -C \
+  -Q "RESTORE DATABASE ClinicScheduling FROM DISK = '/var/opt/mssql/data/ClinicScheduling.bak' WITH REPLACE"
+```
+
+---
+
+## 5) Connection string recomendada
+
+```text
+Server=<host>,1433;Database=ClinicScheduling;User Id=<user>;Password=<password>;TrustServerCertificate=True;Encrypt=False
+```
+
+### Consideraciones
+
+- Si API y SQL Server corren en contenedores distintos, usar hostname de red Docker (no `localhost`).
+- Para producción, proteger secretos y evitar credenciales en código.
+
+---
+
+## 6) Verificación posterior a la creación
+
+Checklist mínimo:
+
+- [ ] La base `ClinicScheduling` existe.
+- [ ] Tablas principales creadas.
+- [ ] Los 3 stored procedures están presentes.
+- [ ] La API conecta sin error de login/timeout.
+- [ ] Endpoints de agenda responden correctamente.
+
+---
+
+## 7) Diagrama de datos
+
+El modelo visual se encuentra en:
+
+- `database diagram.drawio`
+
+Puede abrirse con:
+
+- https://app.diagrams.net/
+
+Úsalo como referencia rápida para relaciones y navegación de entidades.
+

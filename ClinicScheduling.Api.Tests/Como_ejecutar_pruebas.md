@@ -1,80 +1,95 @@
-PRUEBAS E INTEGRACIÓN
+# Guía de pruebas de integración
 
-Se integraron pruebas para cubrir la mayor parte posible del CRUD general de todos los controllers del sistema.
-Estas pruebas abarcan:
+Este proyecto contiene pruebas de integración para validar el comportamiento real de la API (HTTP + capa de datos + reglas de negocio).
 
-- Validaciones de reglas de negocio
-- Operaciones CRUD (Get, GetById, Create, Update, Delete)
-- Flujo completo de los endpoints
-- Validación del comportamiento de los Stored Procedures
-- Escenarios de error y casos límite
+---
 
-Las pruebas no son unitarias aisladas, sino pruebas de integración.
-Esto significa que simulan peticiones HTTP reales contra la API, permitiendo validar el flujo completo del sistema,
-desde los controllers hasta la base de datos.
+## 1) Alcance de las pruebas
 
-CONFIGURACIÓN PARA EJECUTAR LAS PRUEBAS
+Las pruebas cubren principalmente:
 
-Dentro del proyecto de pruebas, en la carpeta:
+- CRUD de controladores principales.
+- Validaciones de reglas de negocio.
+- Flujos completos de endpoints.
+- Integración con SQL Server.
+- Ejecución de stored procedures de agenda.
 
-Integrations
+No son pruebas unitarias puras: ejercitan la aplicación de extremo a extremo dentro del contexto de testing.
 
-se encuentra la clase:
+---
 
-ClinicWebApplicationFactory.cs
+## 2) Requisitos previos
 
-Esta clase incluye:
+- .NET SDK 9.x
+- SQL Server disponible en `localhost,1433` con credenciales válidas
+- Usuario con permisos para crear base de datos temporal
 
-- Configuración del host de pruebas
-- Creación de una base de datos temporal para testing
-- Carga automática de datos semilla
-- Ejecución automática de Stored Procedures
-- Configuración del entorno de integración
+La factoría de pruebas crea automáticamente una base efímera para cada ejecución.
 
-IMPORTANTE
+---
 
-Para ejecutar las pruebas es necesario contar con una instancia de SQL Server disponible, ya sea:
+## 3) Configuración técnica relevante
 
-- SQL Server instalado localmente
-- SQL Server ejecutándose en Docker
+Archivo clave:
 
-Dentro de la clase ClinicWebApplicationFactory.cs se encuentra la connection string utilizada para las pruebas,
-aproximadamente en las líneas 39-40:
+- `ClinicScheduling.Api.Tests/Integration/ClinicWebApplicationFactory.cs`
 
-var serverConnectionString =
-"Server=localhost,1433;User Id=sa;Password=Developer123;TrustServerCertificate=True;MultipleActiveResultSets=True;";
+Esta clase se encarga de:
 
-Esta conexión se utiliza para:
+- reemplazar `DbContext` productivo por uno de pruebas,
+- crear una base temporal con nombre único,
+- ejecutar `EnsureCreated`,
+- cargar stored procedures desde `ClinicScheduling.Api/Docs/SqlServer/SpDb`,
+- insertar datos semilla para escenarios de test.
 
-- Crear automáticamente una base de datos de pruebas
-- Ejecutar migraciones
-- Cargar los Stored Procedures
-- Insertar datos semilla
-- Ejecutar las pruebas de integración
+---
 
-Las pruebas ejecutan peticiones HTTP reales, permitiendo validar:
+## 4) Ejecutar pruebas
 
-- Funcionamiento de controllers
-- Reglas de negocio
-- Flujo completo del sistema
-- Integración con base de datos
-- Correcta ejecución de Stored Procedures
+Desde la raíz del repositorio:
 
-COBERTURA DE PRUEBAS
+```bash
+dotnet test
+```
 
-El proyecto cuenta con más de 40 pruebas que validan múltiples funcionalidades del sistema, incluyendo:
+O solo el proyecto de tests:
 
-- Creación de doctores
-- Creación de pacientes
-- Creación de citas
-- Validación de horarios disponibles
-- Prevención de citas duplicadas
-- Validación de horarios laborales
-- Actualización de entidades
-- Eliminación de registros
-- Consulta de disponibilidad
-- Integración con Stored Procedures
+```bash
+dotnet test ClinicScheduling.Api.Tests/ClinicScheduling.Api.Tests.csproj
+```
 
-Estas pruebas sirvieron como apoyo para validar el correcto funcionamiento del sistema y detectar posibles errores
-durante el desarrollo. Aunque aún pueden existir algunos bugs menores, las pruebas permiten asegurar que el flujo
-principal del sistema funcione correctamente.
+---
+
+## 5) Solución de problemas comunes
+
+### Error de conexión a SQL Server
+
+Verifica:
+
+- que SQL Server esté corriendo,
+- puerto `1433` accesible,
+- credenciales correctas,
+- certificado/trust si aplica.
+
+### Fallo al crear stored procedures
+
+Verifica rutas y existencia de:
+
+- `sp_CreateAppointment.sql`
+- `sp_GetAppointmentsByDoctor.sql`
+- `sp_GetDoctorAvailability.sql`
+
+### Errores por colisión de estado
+
+Las pruebas intentan aislar estado con una base temporal por ejecución. Si hay interrupciones abruptas, limpiar bases temporales antiguas puede ayudar.
+
+---
+
+## 6) Buenas prácticas al agregar nuevas pruebas
+
+- Nombrar pruebas por comportamiento esperado.
+- Preparar datos mínimos por escenario.
+- Evitar dependencias ocultas entre pruebas.
+- Cubrir casos felices + errores esperados.
+- Mantener las pruebas determinísticas.
+
